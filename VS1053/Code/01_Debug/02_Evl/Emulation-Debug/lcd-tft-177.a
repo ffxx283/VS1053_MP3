@@ -1,0 +1,798 @@
+
+//_____________________________________________________________
+//
+	.sect code,LcdStartCommand	// 48 words
+	.export _LcdStartCommand
+_LcdStartCommand:
+F0B4:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx LR0,(I6)+1
+	stx I6,(I6)
+	sty I4,(I6)
+	ldx (I6),I4
+	ldx (I6)+1,NULL	// I6 += 1
+	stx A0,(I6)
+	sty A1,(I6)+1
+	stx B0,(I6)
+	sty I0,(I6)
+F0B2:
+	ldx (I4)-2,NULL	// I4 += -2
+// (*(volatile u_int16 __x *)(u_int16)(0xC019)) |= (1 << 5) | (1 << 0) | (1 << 3);
+	ldc 49177,I0	// 49177 -> ET1
+	ldx (I0),A1/*V*/	// ET1 ==> ET2
+	ldc 41,A0	// 41 -> 1 -> ET0
+	or A1,A0,A1	// ET2 or ET0 -> ET3
+	stx A1,(I0)/*V*/	// ET3 ==> ET1
+// ;
+// (*(volatile u_int16 __x *)(u_int16)(0xC019)) &= ~(1 << 7);
+	ldx (I0),A1/*V*/	// ET1 ==> ET5
+	ldc 65407,B0	// 65407 -> 1 -> ET4
+	and A1,B0,A1	// ET5 and ET4 -> ET6
+	stx A1,(I0)/*V*/	// ET6 ==> ET1
+
+// ;
+// {(*(volatile u_int16 __x *)(u_int16)(0xC019)) |= (1 << 5) | (1 << 0) | (1 << 3);
+	ldx (I0),A1/*V*/	// ET1 ==> ET7
+	or A1,A0,A0	// ET7 or ET0 -> ET8
+	stx A0,(I0)/*V*/	// ET8 ==> ET1
+// ;(*(volatile u_int16 __x *)(u_int16)(0xC019)) &= ~(1 << 5);
+	ldx (I0),A0/*V*/	// ET1 ==> ETa
+	ldc 65503,A1	// 65503 -> 1 -> ET9
+	and A0,A1,A0	// ETa and ET9 -> ETb
+	stx A0,(I0)/*V*/	// ETb ==> ET1
+// ;
+// 	SpiSend(opcode<<8,8);
+	ldc 8,A0	// 8 -> 0 -> ETc
+	ldx (I4)+2,A1	// unspill 'opcode' from #0
+	ashl A1,A0,A0	// 'opcode' << ETc -> ETd
+	ldc 8,A1	// 8 -> A1
+	ldx (I6)+1,NULL	// I6 += 1
+	call _SpiSend
+	nop
+// jumped away
+F0B3:
+// (*(volatile u_int16 __x *)(u_int16)(0xC019)) |= (1 << 7);
+	ldx (I0),A1/*V*/	// ET1 ==> ET10
+	ldc 128,A0	// 128 -> 1 -> ETf
+	or A1,A0,A0	// ET10 or ETf -> ET11
+	stx A0,(I0)/*V*/	// ET11 ==> ET1
+F0B1:
+	ldy (I6),I0
+	ldx (I6)-1,B0
+	ldy (I6),A1
+	ldx (I6)-1,A0
+	ldx (I4),I6
+	ldy (I4),I4
+	ldx (I6)-1,NULL	// I6 += -1
+	ldx (I6)-1,LR0
+	jr
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect code,LcdDelay	// 31 words
+	.export _LcdDelay
+_LcdDelay:
+F1B11:
+	ldx (I6)+2,NULL	// I6 += 2
+	stx I6,(I6)
+	sty I4,(I6)
+	ldx (I6),I4
+	ldx (I6)+1,NULL	// I6 += 1
+	stx A0,(I6)
+	sty A1,(I6)+1
+	stx B0,(I6)
+	sty B1,(I6)
+F1B9:
+	ldx (I4)-3,NULL	// I4 += -3
+	ldx (I4)+1,A0	// unspill A0 from #0
+	ldx (I4)+2,A1	// unspill A1 from #0
+	j F1B6
+	nop
+// jumped away
+F1B3:	// (loop lvl 2)
+// 	}
+// {
+// 		n=~n;
+	xor B,ONES,A	// 'n' xor (-1) -> 'n'
+// 		n=~n;
+	xor A,ONES,A	// 'n' xor (-1) -> AT6
+F1B6:	// (loop lvl 2)
+	add A,ONES,B	// AT6 + (-1) -> ET2
+	ldc 0,A2	// update guard bits (cmp)
+	sub A,NULL,A	// AT6 != (0) -> (0)
+	nop
+	jzc F1B3	// unsigned compare
+	nop
+// jumped away
+F1B1:
+	ldy (I6),B1
+	ldx (I6)-1,B0
+	ldy (I6),A1
+	ldx (I6)-1,A0
+	ldx (I4),I6
+	ldy (I4),I4
+	ldx (I6)-2,NULL	// I6 += -2
+	jr
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect code,LcdFilledRectangle	// 129 words
+	.export _LcdFilledRectangle
+_LcdFilledRectangle:
+F2B30:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx LR0,(I6)+1
+	stx I6,(I6)
+	sty I4,(I6)
+	ldx (I6),I4
+	ldx (I6)+1,NULL	// I6 += 1
+	stx A0,(I6)
+	sty A1,(I6)+1
+	stx B0,(I6)
+	sty B1,(I6)+1
+	stx C0,(I6)
+	sty C1,(I6)+1
+	stx I0,(I6)
+F2B2:
+	ldx (I4)-4,NULL	// I4 += -4
+	ldx (I6)+1,NULL	// I6 += 1
+
+	ldx (I4)+2,A1	// unspill 'x2' from #0
+	ldx (I4)-1,A0	// unspill 'x1' from #0
+	sub A1,A0,B0	// 'x2' - 'x1' -> ET0
+	sub B0,ONES,B1	// ET0 - (-1) -> 'n'
+// +=lcd0.originX+1;
+	ldc _lcd0+6,I0	// ET5
+	ldx (I0),B0	// ET5 ==> 6 -> ET6
+	sub B0,ONES,B0	// ET6 - (-1) -> ET7
+	add A0,B0,A0	// 'x1' + ET7 -> 'x1'
+// 	y1+=lcd0.originY+2;
+	ldx (I0)+1,NULL	// ET5 += 1
+	ldx (I0),C0	// ET5 ==> 7 -> ETb
+	ldc 2,C1	// 2 -> 1 -> ETc
+	add C0,C1,C0	// ETb + ETc -> ETd
+	ldx (I4)-2,C1	// unspill 'y1' from #0
+	add C1,C0,C1	// 'y1' + ETd -> 'y1'
+// 	x2+=lcd0.originX+1;
+	add A1,B0,B0	// 'x2' + ET7 -> 'x2'
+// 	y2+=lcd0.originY+2;
+	ldx (I4)+5,A1	// unspill 'y2' from #0
+	add A1,C0,C0	// 'y2' + ETd -> 'y2'
+// 	LcdStartCommand(0x2A);
+	ldc 42,A1	// 42 -> 1 -> ET11
+	stx A1,(I6)	// ET11
+	call _LcdStartCommand
+	nop
+// jumped away
+F2B3:
+	ldx (I6)-1,NULL	// I6 += -1
+// 	SpiSend(x1,16);
+	ldc 16,A1	// 16 -> A1
+	ldx (I6)+1,NULL	// I6 += 1
+	call _SpiSend
+	nop
+// jumped away
+F2B4:
+// 	SpiSend(x2,16);
+	add B0,NULL,A0	// 'x2' -> A0
+	ldc 16,A1	// 16 -> A1
+	ldx (I6)+1,NULL	// I6 += 1
+	call _SpiSend
+	nop
+// jumped away
+F2B5:
+	ldx (I6)+1,NULL	// I6 += 1
+// 	LcdStartCommand(0x2B);
+	ldc 43,A0	// 43 -> 1 -> ET15
+	stx A0,(I6)	// ET15
+	call _LcdStartCommand
+	nop
+// jumped away
+F2B6:
+	ldx (I6)-1,NULL	// I6 += -1
+// 	SpiSend(y1,16);
+	add C1,NULL,A0	// 'y1' -> A0
+	ldc 16,A1	// 16 -> A1
+	ldx (I6)+1,NULL	// I6 += 1
+	call _SpiSend
+	nop
+// jumped away
+F2B7:
+// 	SpiSend(y2,16);
+	add C0,NULL,A0	// 'y2' -> A0
+	ldc 16,A1	// 16 -> A1
+	ldx (I6)+1,NULL	// I6 += 1
+	call _SpiSend
+	nop
+// jumped away
+F2B8:
+	ldx (I6)+1,NULL	// I6 += 1
+// 	n*=((y2-y1)+1);
+	sub C0,C1,A0	// 'y2' - 'y1' -> ET18
+	sub A0,ONES,A0	// ET18 - (-1) -> ET19
+	muluu B1,A0	// 'n' * ET19 -> P
+	add NULL,P,A	// P -> AT2b
+	add A0,NULL,C0	// AT2b lsw AT32
+// 	LcdStartCommand(0x2C);
+	ldc 44,A0	// 44 -> 1 -> ET1b
+	stx A0,(I6)	// ET1b
+	call _LcdStartCommand
+	nop
+// jumped away
+F2B9:
+	ldx (I4)-6,NULL	// I4 += -6
+	ldx (I6)-1,NULL	// I6 += -1
+// 	if(texture)
+	ldx (I4)+6,B0	// unspill 'texture' from #-6
+	sub B0,NULL,B0	// 'texture' != (0) -> (0)
+	nop
+	jzc F2B26	// signed compare
+	nop
+// jumped away
+F2B28:
+	ldx (I4)-7,NULL	// I4 += -7
+	ldx (I4)+7,B1	// unspill 'color' from #-7
+	j F2B21
+	nop
+// jumped away
+F2B18:	// (loop lvl 2)
+// 		}
+// {
+// 			SpiSend(color,16);
+	add B1,NULL,A0	// 'color' -> A0
+	ldc 16,A1	// 16 -> A1
+	ldx (I6)+1,NULL	// I6 += 1
+	call _SpiSend
+	nop
+// jumped away
+F2B29:	// (loop lvl 2)
+	add B0,NULL,C0	// AT33 -> AT32
+F2B21:	// (loop lvl 2)
+	add C0,ONES,B0	// AT32 + (-1) -> AT33
+	sub C0,NULL,C0	// AT32 != (0) -> (0)
+	nop
+	jzc F2B18	// unsigned compare
+	nop
+// jumped away
+F2B12:
+// (*(volatile u_int16 __x *)(u_int16)(0xC019)) |= (1 << 5) | (1 << 0) | (1 << 3);
+	ldc 49177,I0	// 49177 -> ET27
+	ldx (I0),A1/*V*/	// ET27 ==> ET28
+	ldc 41,A0	// 41 -> 1 -> ET26
+	or A1,A0,A0	// ET28 or ET26 -> ET29
+	stx A0,(I0)/*V*/	// ET29 ==> ET27
+F2B1:
+	ldx (I6)-1,I0
+	ldy (I6),C1
+	ldx (I6)-1,C0
+	ldy (I6),B1
+	ldx (I6)-1,B0
+	ldy (I6),A1
+	ldx (I6)-1,A0
+	ldx (I4),I6
+	ldy (I4),I4
+	ldx (I6)-1,NULL	// I6 += -1
+	ldx (I6)-1,LR0
+	jr
+	nop
+// jumped away
+F2B26:
+	mv B0,I0	// 'texture' -> AT2f
+	j F2B16
+	nop
+// jumped away
+F2B13:	// (loop lvl 2)
+// 		}
+// {
+// 			SpiSend(*texture++,16);
+	ldx (I0),A0	// AT2f ==> ET22
+	ldc 16,A1	// 16 -> A1
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I0)+1,NULL	// AT2f += 1
+	call _SpiSend
+	nop
+// jumped away
+F2B27:	// (loop lvl 2)
+	add B0,NULL,C0	// AT31 -> AT32
+F2B16:	// (loop lvl 2)
+	add C0,ONES,B0	// AT32 + (-1) -> AT31
+	sub C0,NULL,C0	// AT32 != (0) -> (0)
+	nop
+	jzc F2B13	// unsigned compare
+	nop
+// jumped away
+	j F2B12
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect code,LcdTextOutXY	// 181 words
+	.export _LcdTextOutXY
+_LcdTextOutXY:
+F3B41:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx LR0,(I6)+1
+	stx I6,(I6)
+	sty I4,(I6)
+	ldx (I6),I4
+	ldx (I6)+4,NULL	// I6 += 4
+	stx A1,(I6)
+	sty B0,(I6)+1
+	stx B1,(I6)
+	sty C0,(I6)+1
+	stx C1,(I6)
+	sty D0,(I6)+1
+	stx D1,(I6)
+	sty I0,(I6)+1
+	stx I1,(I6)
+	sty I2,(I6)+1
+	stx I3,(I6)
+	sty LC,(I6)+1
+	stx LS,(I6)
+	sty LE,(I6)
+F3B28:
+	ldc 8,D0	// 8 -> 1 -> ET13
+	ldc _lcd0+4,I1	// ET1c
+	sub NULL,ONES,C1	// 1 -> 0 -> ET16
+	ldc _buffd53f88,C0	// ETc
+	ldc _lcd0+5,I3	// ET9
+	ldc 7,D1	// 7 -> 1 -> ET2b
+F3B30:
+	ldx (I4)-3,NULL	// I4 += -3
+	ldx (I4)+1,B1	// unspill AT3f from #-3
+	ldx (I4)-2,B0	// unspill AT40 from #-2
+	ldx (I4)+4,I2	// unspill AT3b from #-4
+	j F3B6
+	nop
+// jumped away
+F3B9:	// (loop lvl 2)
+	ldx (I6)+1,NULL	// I6 += 1
+// 		LcdFilledRectangle(x1,y1,x1+6,y1+7,buff,0);
+	and NULL,NULL,A0	// 0 -> ETe
+	stx A0,(I6)+1	// ETe
+	stx C0,(I6)+1	// ETc
+	add B1,D1,A0	// AT3f + ET2b -> ET2c
+	stx A0,(I6)+1	// ET2c
+	ldc 6,A0	// 6 -> ET2d
+	add B0,A0,A0	// AT40 + ET2d -> ET2e
+	stx A0,(I6)+1	// ET2e
+	stx B1,(I6)+1	// AT3f
+	stx B0,(I6)	// AT40
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F3B20:	// (loop lvl 2)
+	ldx (I6)-6,NULL	// I6 += -6
+// 		x1 += 7;
+	add B0,D1,B0	// AT40 + ET2b -> AT40
+// 		if (x1>160-7)
+	ldc 153,A0	// 153 -> ET30
+	sub A0,B0,A0	// ET30 <= AT40 -> AT3a
+	nop
+	jcs F3B22	// unsigned compare
+	nop
+// jumped away
+F3B21:	// (loop lvl 2)
+// 		}
+// {
+// 			x1=0;
+// 			y1+=8;
+	add B1,D0,B1	// AT3f + ET13 -> AT3f
+	and NULL,NULL,B0	// 0 -> AT40
+F3B22:	// (loop lvl 2)
+// 		s++;
+	ldx (I2)+1,NULL	// AT3b += 1
+F3B6:	// (loop lvl 2)
+	ldx (I2),A0	// AT3b ==> ET0
+	sub A0,NULL,A0	// ET0 == (0) -> (0)
+	nop
+	jzs F3B4	// signed compare
+	nop
+// jumped away
+F3B3:	// (loop lvl 2)
+	ldx (I4)+2,NULL	// I4 += 2
+	stx B0,(I4)-1	// AT42 spills to #2
+	stx I1,(I4)	// AT41 spills to #1
+// 	}
+
+	ldx (I2),A0	// AT3b ==> ET0
+	add A0,A0,A1	// ET0 + ET0 -> AT3
+	add A0,A1,A1	// ET0 + AT3 -> ET4
+	ldc _latin1,A0	// ET1
+	add A0,A1,B0	// ET1 + ET4 -> ET5
+// (buff,lcd0.backgroundColor,sizeof(buff));
+	ldx (I3),A1	// ET9 ==> 5 -> ETa
+	ldc _buffd53f88,I0	// I0
+	ldc 56,A0	// 56 -> A0
+	sty B0,(I4)	// B0 spills to #0
+	ldx (I4)+1,I1	// unspill AT41 from #1
+	ldx (I4)-2,B0	// unspill AT42 from #2
+	call _memset
+	nop
+// jumped away
+F3B7:	// (loop lvl 2)
+// 		for (x=0; x<3; x++)
+	and NULL,NULL,A1	// 0 -> 'x'
+	j F3B11
+	nop
+// jumped away
+F3B11:	// (loop lvl 3)
+	ldc 3,A0	// 3 -> ETf
+	sub A1,A0,A0	// 'x' >= ETf -> AT37
+	nop
+	jcs F3B9	// unsigned compare
+	nop
+// jumped away
+F3B8:	// (loop lvl 3)
+	ldx (I4)+1,NULL	// I4 += 1
+	stx B0,(I4)	// AT43 spills to #1
+// 		}
+
+	add A1,A1,A0	// 'x' + 'x' -> ET11
+	add C0,A0,B0	// ETc + ET11 -> ET12
+// (y=0; y<8; y++)
+	and NULL,NULL,A0	// 0 -> 'y'
+	mv B0,I0	// ET12 -> 'b'
+	ldx (I4)-1,B0	// unspill AT43 from #1
+F3B29:	// (loop lvl 3)
+	ldc 7,LC	// loop 8 iterations
+	loop LC,F3B13-1
+	nop
+//loop resumes
+F3B15:	// loop entry
+F3B12:	// (loop lvl 4)
+	ldx (I4)+3,NULL	// I4 += 3
+	stx I0,(I4)-1	// AT47 spills to #3
+	sty B1,(I4)	// AT46 spills to #2
+	stx B0,(I4)-1	// AT45 spills to #2
+	stx A1,(I4)	// AT44 spills to #1
+// 			}
+// {
+// 				if (*p & (1 << (y+8)))
+	ldy (I4)+1,I0	// unspill 'p' from #0
+	ldy (I0),B0	// 'p' ==> ET14
+	add A0,D0,A1	// 'y' + ET13 -> ET17
+	ashl C1,A1,B1	// ET16 << ET17 -> ET18
+	and B0,B1,A1	// ET14 and ET18 -> ET1a
+	ldx (I4),B0	// unspill AT45 from #2
+	ldy (I4)+1,B1	// unspill AT46 from #2
+	ldx (I4)-3,I0	// unspill AT47 from #3
+	sub A1,NULL,A1	// ET1a != (0) -> (0)
+	nop
+	jzc F3B37	// unsigned compare
+	nop
+// jumped away
+F3B38:	// (loop lvl 4)
+	ldx (I4)+1,NULL	// I4 += 1
+	ldx (I4)-1,A1	// unspill AT44 from #1
+F3B17:	// (loop lvl 4)
+	ldx (I4)+2,NULL	// I4 += 2
+	sty I0,(I4)+1	// AT4c spills to #2
+	stx B1,(I4)-1	// AT4b spills to #3
+	stx B0,(I4)-1	// AT4a spills to #2
+	stx A1,(I4)	// AT49 spills to #1
+// 				if (*p & (1 << (y)))
+	ldy (I4)+1,I0	// unspill 'p' from #0
+	ldy (I0),B0	// 'p' ==> ET15
+	ashl C1,A0,B1	// ET16 << 'y' -> ET1e
+	and B0,B1,A1	// ET15 and ET1e -> ET20
+	ldx (I4)+1,B0	// unspill AT4a from #2
+	ldx (I4)-1,B1	// unspill AT4b from #3
+	ldy (I4)-2,I0	// unspill AT4c from #2
+	sub A1,NULL,A1	// ET20 != (0) -> (0)
+	nop
+	jzc F3B39	// unsigned compare
+	nop
+// jumped away
+F3B40:	// (loop lvl 4)
+	ldx (I4)+1,NULL	// I4 += 1
+	ldx (I4)-1,A1	// unspill AT49 from #1
+F3B19:	// (loop lvl 4)
+// 				b += 7;
+	sub A0,ONES,A0	// 'y' - (-1) -> 'y'
+	ldx (I0)+7,NULL	// 'b' += 7
+F3B34:	// (loop lvl 4)
+//	(1 nop's needed)
+	nop
+// loop end
+F3B13:	// loop exit
+	ldx (I4)+1,NULL	// I4 += 1
+// 			p++;
+	sub A1,ONES,A1	// 'x' - (-1) -> 'x'
+	ldy (I4),I0	// unspill 'p' from #0
+	ldx (I0)+1,NULL	// 'p' += 1
+	sty I0,(I4)-1	// 'p' spills to #0
+	j F3B11
+	nop
+// jumped away
+F3B39:	// (loop lvl 4)
+	ldx (I4)+1,NULL	// I4 += 1
+	ldx (I4)-1,A1	// unspill AT49 from #1
+F3B18:	// (loop lvl 4)
+	ldx (I4)+1,NULL	// I4 += 1
+	stx A0,(I4)	// AT4d spills to #1
+// b[1] = lcd0.textColor;
+	ldx (I1),A0	// ET1c ==> 4 -> ET1d
+	ldx (I0)+1,NULL	// 'b' += 1
+	stx A0,(I0)	// ET1d ==> 'b'
+	ldx (I0)-1,NULL	// 'b' += -1
+	ldx (I4)-1,A0	// unspill AT4d from #1
+	j F3B19
+	nop
+// jumped away
+F3B37:	// (loop lvl 4)
+	ldx (I4)+1,NULL	// I4 += 1
+	ldx (I4)-1,A1	// unspill AT44 from #1
+F3B16:	// (loop lvl 4)
+	ldx (I4)+1,NULL	// I4 += 1
+	stx A0,(I4)	// AT48 spills to #1
+// b[0] = lcd0.textColor;
+	ldx (I1),A0	// ET1c ==> 4 -> ET1d
+	stx A0,(I0)	// ET1d ==> 'b'
+	ldx (I4)-1,A0	// unspill AT48 from #1
+	j F3B17
+	nop
+// jumped away
+F3B4:
+// 	return x1;
+	add B0,NULL,A0	// AT40 returns via A0
+F3B1:
+	ldy (I6),LE
+	ldx (I6)-1,LS
+	ldy (I6),LC
+	ldx (I6)-1,I3
+	ldy (I6),I2
+	ldx (I6)-1,I1
+	ldy (I6),I0
+	ldx (I6)-1,D1
+	ldy (I6),D0
+	ldx (I6)-1,C1
+	ldy (I6),C0
+	ldx (I6)-1,B1
+	ldy (I6),B0
+	ldx (I6)-1,A1
+	ldx (I4),I6
+	ldy (I4),I4
+	ldx (I6)-1,NULL	// I6 += -1
+	ldx (I6)-1,LR0
+	jr
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect code,LcdPutString	// 31 words
+	.export _LcdPutString
+_LcdPutString:
+F4B4:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx LR0,(I6)+1
+	stx I6,(I6)
+	sty I4,(I6)
+	ldx (I6),I4
+	ldx (I6)+1,NULL	// I6 += 1
+	stx A0,(I6)
+	sty I0,(I6)
+F4B2:
+	ldx (I4)-2,NULL	// I4 += -2
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I4)+2,A0	// unspill 's' from #-2
+// 	lcd0.x = LcdTextOutXY(lcd0.x, lcd0.y, s);
+	stx A0,(I6)+1	// 's'
+	ldc _lcd0+3,I0	// ET2
+	ldx (I0),A0	// ET2 ==> 3 -> ET3
+	stx A0,(I6)+1	// ET3
+	ldx (I0)-1,NULL	// ET2 += -1
+	ldx (I0),A0	// ET2 ==> 2 -> ET6
+	stx A0,(I6)	// ET6
+	ldc _lcd0+2,I0	// ET5
+	call _LcdTextOutXY
+	nop
+// jumped away
+F4B3:
+	ldx (I6)-3,NULL	// I6 += -3
+	stx A0,(I0)	// ET7 ==> ET5
+F4B1:
+	ldy (I6),I0
+	ldx (I6)-1,A0
+	ldx (I4),I6
+	ldy (I4),I4
+	ldx (I6)-1,NULL	// I6 += -1
+	ldx (I6)-1,LR0
+	jr
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect code,LcdInit	// 119 words
+	.export _LcdInit
+_LcdInit:
+F5B17:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx LR0,(I6)+1
+	stx I6,(I6)
+	sty I4,(I6)
+	ldx (I6),I4
+	ldx (I6)+1,NULL	// I6 += 1
+	stx A1,(I6)
+	sty B0,(I6)+1
+	stx I0,(I6)
+F5B2:
+	ldx (I6)+1,NULL	// I6 += 1
+// *(volatile u_int16 __x *)(u_int16)(0xC014)) |= (1 << 11);
+	ldc 49172,I0	// 49172 -> ET1
+	ldx (I0),A0/*V*/	// ET1 ==> ET2
+	ldc 2048,A1	// 2048 -> 1 -> ET0
+	or A0,A1,A0	// ET2 or ET0 -> ET3
+	stx A0,(I0)/*V*/	// ET3 ==> ET1
+// 	LcdStartCommand(0x01);
+	sub NULL,ONES,B0	// 1 -> 1 -> ET4
+	stx B0,(I6)	// ET4
+	call _LcdStartCommand
+	nop
+// jumped away
+F5B3:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-1,NULL	// I6 += -1
+// 	LcdStartCommand(0x01);
+	stx B0,(I6)	// ET4
+	call _LcdStartCommand
+	nop
+// jumped away
+F5B4:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-1,NULL	// I6 += -1
+// 	LcdDelay(100000);
+	ldc 34464,A0	// 34464 -> 3 -> A0
+	sub NULL,ONES,A1	// 1 -> A1
+	stx A0,(I6)+1	// A0
+	stx A1,(I6)	// A1
+	call _LcdDelay
+	nop
+// jumped away
+F5B5:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-2,NULL	// I6 += -2
+// 	LcdStartCommand(0x11);
+	ldc 17,B0	// 17 -> 1 -> ET6
+	stx B0,(I6)	// ET6
+	call _LcdStartCommand
+	nop
+// jumped away
+F5B6:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-1,NULL	// I6 += -1
+// 	LcdDelay(100000);
+	stx A0,(I6)+1	// A0
+	stx A1,(I6)	// A1
+	call _LcdDelay
+	nop
+// jumped away
+F5B7:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-2,NULL	// I6 += -2
+// 	LcdStartCommand(0x29);
+	ldc 41,B0	// 41 -> 1 -> ET7
+	stx B0,(I6)	// ET7
+	call _LcdStartCommand
+	nop
+// jumped away
+F5B8:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-1,NULL	// I6 += -1
+// 	LcdDelay(100000);
+	stx A0,(I6)+1	// A0
+	stx A1,(I6)	// A1
+	call _LcdDelay
+	nop
+// jumped away
+F5B9:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-2,NULL	// I6 += -2
+// 	LcdStartCommand(0x3A);
+	ldc 58,A0	// 58 -> 1 -> ET8
+	stx A0,(I6)	// ET8
+	call _LcdStartCommand
+	nop
+// jumped away
+F5B10:
+	ldx (I6)-1,NULL	// I6 += -1
+// 	SpiSend(5 <<8,8);
+	ldc 1280,A0	// 1280 -> A0
+	ldc 8,A1	// 8 -> A1
+	ldx (I6)+1,NULL	// I6 += 1
+	call _SpiSend
+	nop
+// jumped away
+F5B11:
+	ldx (I6)+1,NULL	// I6 += 1
+// 	LcdStartCommand(0x36);
+	ldc 54,A0	// 54 -> 1 -> ETc
+	stx A0,(I6)	// ETc
+	call _LcdStartCommand
+	nop
+// jumped away
+F5B12:
+	ldx (I6)-1,NULL	// I6 += -1
+// 	SpiSend(0x68<<8,8);
+	ldc 26624,A0	// 26624 -> A0
+	ldc 8,A1	// 8 -> A1
+	ldx (I6)+1,NULL	// I6 += 1
+	call _SpiSend
+	nop
+// jumped away
+F5B13:
+	ldx (I6)+1,NULL	// I6 += 1
+// 	LcdStartCommand(0x26);
+	ldc 38,A0	// 38 -> 1 -> ETf
+	stx A0,(I6)	// ETf
+	call _LcdStartCommand
+	nop
+// jumped away
+F5B14:
+	ldx (I6)-1,NULL	// I6 += -1
+// 	SpiSend(8<<8,8);
+	ldc 2048,A0	// 2048 -> A0
+	ldc 8,A1	// 8 -> A1
+	ldx (I6)+1,NULL	// I6 += 1
+	call _SpiSend
+	nop
+// jumped away
+F5B15:
+	ldx (I6)+1,NULL	// I6 += 1
+// (*(volatile u_int16 __x *)(u_int16)(0xC019)) |= (1 << 5) | (1 << 0) | (1 << 3);
+	ldc 49177,I0	// 49177 -> ET11
+	ldx (I0),A0/*V*/	// ET11 ==> ET12
+	or A0,B0,A0	// ET12 or ET7 -> ET13
+	stx A0,(I0)/*V*/	// ET13 ==> ET11
+// ;
+// 	LcdFilledRectangle(0,0,159,127,0,lcd0.backgroundColor);
+	ldc _lcd0+5,I0	// ET16
+	ldx (I0),A0	// ET16 ==> 5 -> ET17
+	stx A0,(I6)+1	// ET17
+	and NULL,NULL,A0	// 0 -> 0 -> ET18
+	stx A0,(I6)+1	// ET18
+	ldc 127,A0	// 127 -> 1 -> ET19
+	stx A0,(I6)+1	// ET19
+	ldc 159,A0	// 159 -> 1 -> ET1a
+	stx A0,(I6)+1	// ET1a
+	and NULL,NULL,A0	// 0 -> 1 -> ET1b
+	stx A0,(I6)+1	// ET1b
+	stx A0,(I6)	// ET1b
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F5B16:
+	ldx (I6)-6,NULL	// I6 += -6
+F5B1:
+	ldx (I6)-1,I0
+	ldy (I6),B0
+	ldx (I6)-1,A1
+	ldx (I4),I6
+	ldy (I4),I4
+	ldx (I6)-1,NULL	// I6 += -1
+	ldx (I6)-1,LR0
+	jr
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect data_x,init_x	// 8 words
+	.export _lcd0
+_lcd0:
+	.word 160, 128, 0, 0, 65535, 50712, 0, 0
+
+//_____________________________________________________________
+//
+	.sect data_x,bss_x	// 56 words
+_buffd53f88:
+	.bss 56
+
+	.end

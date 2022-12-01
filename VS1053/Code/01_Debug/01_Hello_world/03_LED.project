@@ -1,0 +1,67 @@
+[Project]
+Name                          = "03_LED"
+Version                       = "1.10"
+ParentSolutionType            = "vs1053_solution", "vs1063_solution"
+ActiveConfiguration           = "Emulation-Debug"
+Folders                       = "Source files", "Header files", "ASM files", "Other"
+Files                         = "delay.c", "asm.s", "delay.h", "init.c", "board.h"
+Configurations                = "Emulation-Debug"
+Description                   = "Real-time stereo audio with delay. Tested boards: VS10XX Prototyping Board v2.0."
+LibPath = "libvs1053b"
+
+[FILE_delay.c]
+RelativePath                  = "."
+ProjectFolder                 = "Source files"
+ObjFile                       = "delay.o"
+
+[FILE_asm.s]
+RelativePath                  = "."
+ProjectFolder                 = "ASM files"
+ObjFile                       = "asm.o"
+
+[FILE_delay.h]
+RelativePath                  = "."
+ProjectFolder                 = "Header files"
+ObjFile                       = ""
+
+[FILE_init.c]
+RelativePath                  = "."
+ProjectFolder                 = "Source files"
+ObjFile                       = "init.o"
+
+[FILE_board.h]
+RelativePath                  = "."
+ProjectFolder                 = "Header files"
+ObjFile                       = ""
+
+[CFG_Emulation-Debug]
+TargetType                    = "Executable"
+TargetFilename                = "03_LED.coff"
+TargetRelativePath            = "Emulation-Debug"
+HWDescFile                    = "hw_desc"
+ImageType                     = "0"
+ImageExecAddr                 = ""
+PreBuildCmd                   = ""
+PostBuildCmd                  = ""
+CCompiler                     = "lcc"
+Assembler                     = "vsa"
+Linker                        = "vslink"
+Archiver                      = "vsar"
+IncludePaths                  = ""
+Defines = "DEBUG, VS1053"
+CWarningFlags                 = ""
+DebugSymbols                  = "YES"
+COptLevel                     = "-O6"
+CExtraFlags                   = "-fsmall-code"
+AsmListFileName               = ""
+AsmExtraFlags = "-D ASM -D VS1053"
+LibPaths                      = ""
+Libs                          = "-lc"
+StartupModule = "$(HOMEPATH)/libvs1053b/c.o"
+LinkMemDescFileName = "user_vs1053.mem"
+LinkCmdFileName               = ""
+LinkExtraFlags = "$(HOMEPATH)/libvs1053b/rom1053b.o"
+KeepRelocations               = "YES"
+IncrementalLinking            = "NO"
+StripSymbols                  = "NO"
+DebugMemDescFile              = "debug_use_all.mem"

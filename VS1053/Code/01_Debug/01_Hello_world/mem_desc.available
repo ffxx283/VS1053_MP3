@@ -1,0 +1,44 @@
+MEMORY {
+#### Free 0 32 1 ####
+  page 0:
+    I_32: origin = 32, length = 1
+#### Free 0 33 1 ####
+  page 0:
+    I_33: origin = 33, length = 1
+#### Free 0 34 1 ####
+  page 0:
+    I_34: origin = 34, length = 1
+#### Free 0 35 1 ####
+  page 0:
+    I_35: origin = 35, length = 1
+#### Free 0 36 1 ####
+  page 0:
+    I_36: origin = 36, length = 1
+#### Free 0 37 1 ####
+  page 0:
+    I_37: origin = 37, length = 1
+#### Free 0 38 1 ####
+  page 0:
+    I_38: origin = 38, length = 1
+#### Free 0 39 1 ####
+  page 0:
+    I_39: origin = 39, length = 1
+#### Free 0 40 1 ####
+  page 0:
+    I_40: origin = 40, length = 1
+#### Free 0 41 1 ####
+  page 0:
+    I_41: origin = 41, length = 1
+#### Free 0 126 3970 ####
+  page 0:
+    I_126: origin = 126, length = 3970
+#### Free 1 2048 4096 ####
+  page 1:
+    X_2048: origin = 2048, length = 4096
+#### Free 2 4096 2048 ####
+  page 2:
+    Y_4096: origin = 4096, length = 2048
+#### Free 2 57344 8192 ####
+  page 2:
+    Y_57344: origin = 57344, length = 8192
+}

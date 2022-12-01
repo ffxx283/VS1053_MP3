@@ -1,0 +1,617 @@
+
+//_____________________________________________________________
+//
+	.sect code,AmpToDB	// 65 words
+	.export _AmpToDB
+_AmpToDB:
+F0B28:
+	ldx (I6)+2,NULL	// I6 += 2
+	stx I6,(I6)
+	sty I4,(I6)
+	ldx (I6),I4
+	ldx (I6)+1,NULL	// I6 += 1
+	stx A1,(I6)
+	sty B0,(I6)+1
+	stx B1,(I6)
+	sty C0,(I6)+1
+	stx I0,(I6)
+	sty LC,(I6)+1
+	stx LS,(I6)
+	sty LE,(I6)
+F0B2:
+	ldx (I4)-2,NULL	// I4 += -2
+// res
+
+	ldx (I4)+2,A0	// unspill AT1f from #-2
+	abs A0,A0	// AT1f abs AT1f
+// (n)
+	ldc 96,A1	// 96 -> 'res'
+	sub A0,NULL,A0	// AT1f == (0) -> (0)
+	nop
+	jzs F0B4	// unsigned compare
+	nop
+// jumped away
+F0B3:
+// n--;
+	add A0,ONES,A0	// AT1f + (-1) -> AT1f
+F0B4:
+// 	if (!n)
+	sub A0,NULL,A0	// AT1f != (0) -> (0)
+	nop
+	jzc F0B10	// unsigned compare
+	nop
+// jumped away
+F0B5:
+// 	return 0;
+	and NULL,NULL,A0	// 0 -> 1 -> ET6
+F0B1:
+	ldy (I6),LE
+	ldx (I6)-1,LS
+	ldy (I6),LC
+	ldx (I6)-1,I0
+	ldy (I6),C0
+	ldx (I6)-1,B1
+	ldy (I6),B0
+	ldx (I6)-1,A1
+	ldx (I4),I6
+	ldy (I4),I4
+	ldx (I6)-2,NULL	// I6 += -2
+	jr
+	nop
+// jumped away
+F0B7:	// (loop lvl 2)
+// 	}
+// {
+// 		res -= 6;
+	ldc 6,B0	// 6 -> 0 -> ET8
+	sub A1,B0,A1	// 'res' - ET8 -> 'res'
+// 		n <<= 1;
+	add A0,A0,A0	// AT1f >> (-1) -> AT1f
+F0B10:	// (loop lvl 2)
+	ldc 32768,B0	// 32768 -> 1 -> ET7
+	sub A0,B0,B0	// AT1f < ET7 -> AT19
+	nop
+	jcc F0B7	// unsigned compare
+	nop
+// jumped away
+F0B8:
+// 	for (i=0; i<5; i++)
+	and NULL,NULL,B0	// 0 -> 'i'
+F0B19:
+	ldc _linToDBTab,B1	// ETe
+F0B20:
+	ldc 4,LC	// loop 5 iterations
+	loop LC,F0B12-1
+	nop
+//loop resumes
+F0B14:	// loop entry
+F0B11:	// (loop lvl 2)
+// 	if (n >= linToDBTab[i])
+	add B1,B0,C0	// ETe + 'i' -> AT1c
+	mv C0,I0	// AT1c -> ETf
+	ldx (I0),C0	// ETf ==> ET10
+	sub A0,C0,C0	// AT1f < ET10 -> AT1a
+	nop
+	jcc F0B16	// unsigned compare
+	nop
+// jumped away
+F0B15:	// (loop lvl 2)
+// 	}
+// {
+// 		res++;
+	sub A1,ONES,A1	// 'res' - (-1) -> 'res'
+F0B16:	// (loop lvl 2)
+	sub B0,ONES,B0	// 'i' - (-1) -> 'i'
+F0B25:	// (loop lvl 2)
+//	(1 nop's needed)
+	nop
+// loop end
+F0B12:	// loop exit
+// 	return res;
+	add A1,NULL,A0	// 'res' returns via A0
+	j F0B1
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect code,DrawSoundPressureBars	// 133 words
+	.export _DrawSoundPressureBars
+_DrawSoundPressureBars:
+F1B25:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx LR0,(I6)+1
+	stx I6,(I6)
+	sty I4,(I6)
+	ldx (I6),I4
+	ldx (I6)+2,NULL	// I6 += 2
+	stx A0,(I6)
+	sty A1,(I6)+1
+	stx B0,(I6)
+	sty B1,(I6)+1
+	stx C0,(I6)
+	sty C1,(I6)+1
+	stx D0,(I6)
+	sty D1,(I6)+1
+	stx I0,(I6)
+	sty LC,(I6)+1
+	stx LS,(I6)
+	sty LE,(I6)
+	ldx (I4)+1,NULL	// I4 += 1
+	stx I2,(I4)-1	// I2 spills to #0
+F1B2:
+// (i=0; i<2; i++)
+	and NULL,NULL,A1	// 0 -> 'i'
+F1B20:
+	ldc 30,C1	// 30 -> 1 -> ETc
+	ldc 18,B1	// 18 -> 1 -> ET12
+	ldc 23,B0	// 23 -> 1 -> ET11
+	and NULL,NULL,C0	// 0 -> 0 -> ET10
+	ldc 2016,D0	// 2016 -> 1 -> ETf
+	ldc _lcd0+7,I0	// ET1c
+F1B21:
+	ldc 1,LC	// loop 2 iterations
+	loop LC,F1B4-1
+	nop
+//loop resumes
+F1B6:	// loop entry
+F1B3:	// (loop lvl 2)
+	ldx (I4)+1,NULL	// I4 += 1
+	ldx (I6)+1,NULL	// I6 += 1
+// 	}
+// level
+	ldx (I4)-1,A0	// unspill 'samplePair' from #0
+	add A0,A1,A0	// 'samplePair' + 'i' -> AT25
+	mv A0,I2	// AT25 -> ET2
+	ldx (I2),A0	// ET2 ==> ET3
+	stx A0,(I6)	// ET3
+	call _AmpToDB
+	nop
+// jumped away
+F1B7:	// (loop lvl 2)
+	ldx (I6)-1,NULL	// I6 += -1
+// (levelmem[0])
+	ldx (I1),D1	// 'levelmem' ==> ET5
+	sub D1,NULL,D1	// ET5 == (0) -> (0)
+	nop
+	jzs F1B9	// unsigned compare
+	nop
+// jumped away
+F1B8:	// (loop lvl 2)
+// levelmem[0]--;
+	add D1,ONES,D1	// ET5 + (-1) -> ET8
+	stx D1,(I1)	// ET8 ==> 'levelmem'
+F1B9:	// (loop lvl 2)
+// 		if (level > levelmem[0])
+	ldx (I1),D1	// 'levelmem' ==> ET5
+	sub D1,A0,D1	// ET5 <= 'level' -> AT23
+	nop
+	jcs F1B11	// unsigned compare
+	nop
+// jumped away
+F1B10:	// (loop lvl 2)
+// levelmem[0] = level;
+	stx A0,(I1)	// 'level' ==> 'levelmem'
+F1B11:	// (loop lvl 2)
+// 		level = levelmem[0];
+	ldx (I1),A0	// 'levelmem' ==> 'level'
+// 		levelmem++;
+// 		}
+// pos
+	add A0,C1,A0	// 'level' + ETc -> 'pos'
+// (pos>114)
+	ldx (I1)+1,NULL	// 'levelmem' += 1
+	ldc 114,D1	// 114 -> ETe
+	sub D1,A0,D1	// ETe > 'pos' -> AT24
+	nop
+	jcc F1B12	// unsigned compare
+	nop
+// jumped away
+F1B13:	// (loop lvl 2)
+	ldx (I6)+1,NULL	// I6 += 1
+// 			}
+// else {
+// 				LcdFilledRectangle(30,18,pos++,23,0,0x07e0u);
+	stx D0,(I6)+1	// ETf
+	stx C0,(I6)+1	// ET10
+	stx B0,(I6)+1	// ET11
+	sub A0,ONES,D1	// 'pos' - (-1) -> AT28
+	stx A0,(I6)+1	// 'pos'
+	stx B1,(I6)+1	// ET12
+	stx C1,(I6)	// ETc
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F1B17:	// (loop lvl 2)
+	ldx (I6)-6,NULL	// I6 += -6
+F1B14:	// (loop lvl 2)
+	ldx (I6)+1,NULL	// I6 += 1
+// 			LcdFilledRectangle(pos,18,131,23,0,0x0000u);
+	and NULL,NULL,A0	// 0 -> ET0
+	stx A0,(I6)+1	// ET0
+	stx C0,(I6)+1	// ET10
+	stx B0,(I6)+1	// ET11
+	ldc 131,A0	// 131 -> ET18
+	stx A0,(I6)+1	// ET18
+	stx B1,(I6)+1	// ET12
+	stx D1,(I6)	// AT28
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F1B18:	// (loop lvl 2)
+	ldx (I6)-6,NULL	// I6 += -6
+// 		lcd0.originY += 10;
+	ldx (I0),D1	// ET1c ==> 7 -> ET1d
+	ldc 10,A0	// 10 -> ET19
+	add D1,A0,A0	// ET1d + ET19 -> ET1e
+	stx A0,(I0)	// ET1e ==> ET1c
+	sub A1,ONES,A1	// 'i' - (-1) -> 'i'
+F1B22:	// (loop lvl 2)
+//	(1 nop's needed)
+	nop
+// loop end
+F1B4:	// loop exit
+F1B1:
+	ldy (I6),LE
+	ldx (I6)-1,LS
+	ldy (I6),LC
+	ldx (I6)-1,I0
+	ldy (I6),D1
+	ldx (I6)-1,D0
+	ldy (I6),C1
+	ldx (I6)-1,C0
+	ldy (I6),B1
+	ldx (I6)-1,B0
+	ldy (I6),A1
+	ldx (I6)-1,A0
+	ldx (I4),I6
+	ldy (I4),I4
+	ldx (I6)-1,NULL	// I6 += -1
+	ldx (I6)-1,LR0
+	jr
+	nop
+// jumped away
+F1B12:	// (loop lvl 2)
+	ldx (I6)+1,NULL	// I6 += 1
+// 			}
+// {
+// 				LcdFilledRectangle(30,18,114,23,0,0x07e0u);
+	stx D0,(I6)+1	// ETf
+	stx C0,(I6)+1	// ET10
+	stx B0,(I6)+1	// ET11
+	ldc 114,D1	// 114 -> ETe
+	stx D1,(I6)+1	// ETe
+	stx B1,(I6)+1	// ET12
+	stx C1,(I6)	// ETc
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F1B15:	// (loop lvl 2)
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-6,NULL	// I6 += -6
+// 				LcdFilledRectangle(115,18,pos++,23,0,0xf800u);
+	ldc 63488,D1	// 63488 -> ET13
+	stx D1,(I6)+1	// ET13
+	stx C0,(I6)+1	// ET10
+	stx B0,(I6)+1	// ET11
+	sub A0,ONES,D1	// 'pos' - (-1) -> AT28
+	stx A0,(I6)+1	// 'pos'
+	stx B1,(I6)+1	// ET12
+	ldc 115,A0	// 115 -> ET17
+	stx A0,(I6)	// ET17
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F1B16:	// (loop lvl 2)
+	ldx (I6)-6,NULL	// I6 += -6
+	j F1B14
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect code,DrawSoundPressureArea	// 219 words
+	.export _DrawSoundPressureArea
+_DrawSoundPressureArea:
+F2B27:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx LR0,(I6)+1
+	stx I6,(I6)
+	sty I4,(I6)
+	ldx (I6),I4
+	ldx (I6)+4,NULL	// I6 += 4
+	stx A0,(I6)
+	sty A1,(I6)+1
+	stx B0,(I6)
+	sty B1,(I6)+1
+	stx C0,(I6)
+	sty C1,(I6)+1
+	stx D0,(I6)
+	sty D1,(I6)+1
+	stx I0,(I6)
+	sty I2,(I6)+1
+	stx LC,(I6)
+	sty LS,(I6)+1
+	stx LE,(I6)
+F2B2:
+	ldx (I6)+1,NULL	// I6 += 1
+// (0,0,159,0,0,((((128)>>3)<<11)|((((128)>>2)&0x3f)<<5)|(((128)>>3)&0x1f)));
+	ldc 33808,B1	// 33808 -> 1 -> ET0
+	stx B1,(I6)+1	// ET0
+	and NULL,NULL,A1	// 0 -> 0 -> ET1
+	stx A1,(I6)+1	// ET1
+	and NULL,NULL,A0	// 0 -> 1 -> ET2
+	stx A0,(I6)+1	// ET2
+	ldc 159,B0	// 159 -> 1 -> ET3
+	stx B0,(I6)+1	// ET3
+	stx A0,(I6)+1	// ET2
+	stx A0,(I6)	// ET2
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F2B3:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-6,NULL	// I6 += -6
+// 	LcdFilledRectangle(0,1,159,1,0,((((220)>>3)<<11)|((((220)>>2)&0x3f)<<5)|(((220)>>3)&0x1f)));
+	ldc 57083,C0	// 57083 -> 1 -> ET4
+	stx C0,(I6)+1	// ET4
+	stx A1,(I6)+1	// ET1
+	sub NULL,ONES,C0	// 1 -> 1 -> ET5
+	stx C0,(I6)+1	// ET5
+	stx B0,(I6)+1	// ET3
+	stx C0,(I6)+1	// ET5
+	stx A0,(I6)	// ET2
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F2B4:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-6,NULL	// I6 += -6
+// 	LcdFilledRectangle(25,13,131,36,0,((((128)>>3)<<11)|((((128)>>2)&0x3f)<<5)|(((128)>>3)&0x1f)));
+	stx B1,(I6)+1	// ET0
+	stx A1,(I6)+1	// ET1
+	ldc 36,B0	// 36 -> 1 -> ET6
+	stx B0,(I6)+1	// ET6
+	ldc 131,B1	// 131 -> 1 -> ET7
+	stx B1,(I6)+1	// ET7
+	ldc 13,C0	// 13 -> 1 -> ET8
+	stx C0,(I6)+1	// ET8
+	ldc 25,C0	// 25 -> 1 -> ET9
+	stx C0,(I6)	// ET9
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F2B5:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-6,NULL	// I6 += -6
+// 	LcdFilledRectangle(26,14,131,36,0,0x0000u);
+	stx A0,(I6)+1	// ET2
+	stx A1,(I6)+1	// ET1
+	stx B0,(I6)+1	// ET6
+	stx B1,(I6)+1	// ET7
+	ldc 14,A0	// 14 -> 1 -> ETa
+	stx A0,(I6)+1	// ETa
+	ldc 26,A0	// 26 -> 1 -> ETb
+	stx A0,(I6)	// ETb
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F2B6:
+	ldx (I6)-6,NULL	// I6 += -6
+// 	for (i=0; i<9; i++)
+	and NULL,NULL,A0	// 0 -> 'i'
+F2B24:
+	ldc 2,D0	// 2 -> 1 -> ET12
+	ldc 38,B0	// 38 -> 1 -> ET14
+	and NULL,NULL,B1	// 0 -> 0 -> ET1
+	ldc 33808,C1	// 33808 -> 1 -> ET0
+	ldc _lcd0+2,I0	// ET13
+	ldc 12,A1	// 12 -> 1 -> ETe
+	ldc _lcd0+3,I2	// ET18
+	ldc 5,D1	// 5 -> 1 -> ET16
+F2B25:
+	ldc 8,LC	// loop 9 iterations
+	loop LC,F2B8-1
+	nop
+//loop resumes
+F2B10:	// loop entry
+F2B7:	// (loop lvl 2)
+	ldx (I4)+2,NULL	// I4 += 2
+	ldx (I6)+1,NULL	// I6 += 1
+	stx B0,(I4)	// B0 spills to #0
+	sty B1,(I4)-1	// B1 spills to #0
+	stx D0,(I4)+1	// AT39 spills to #1
+// 	}
+// {
+// 		lcd0.x = 126-i*12;
+	muluu A0,A1	// 'i' * ETe -> P
+	add NULL,P,B	// P -> AT35
+	add B0,NULL,D0	// AT35 lsw ETf
+	ldc 126,C0	// 126 -> ETd
+	sub C0,D0,C0	// ETd - ETf -> ET10
+	stx C0,(I0)	// ET10 ==> ET13
+// 		LcdFilledRectangle(lcd0.x,11,lcd0.x,38,0,((((128)>>3)<<11)|((((128)>>2)&0x3f)<<5)|(((128)>>3)&0x1f)));
+	stx C1,(I6)+1	// ET0
+	ldx (I4),B0	// unspill B0 from #0
+	ldy (I4)-1,B1	// unspill B1 from #0
+	stx B1,(I6)+1	// ET1
+	stx B0,(I6)+1	// ET14
+	stx C0,(I6)+1	// ET10
+	ldc 11,D0	// 11 -> ET15
+	stx D0,(I6)+1	// ET15
+	stx C0,(I6)	// ET10
+	ldx (I4)-1,D0	// unspill AT39 from #1
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F2B11:	// (loop lvl 2)
+	ldx (I6)-6,NULL	// I6 += -6
+// 		lcd0.y = 5;
+	stx D1,(I2)	// ET16 ==> ET18
+// 		lcd0.x--;
+	ldx (I0),C0	// ET13 ==> 2 -> ET19
+	add C0,ONES,C0	// ET19 + (-1) -> ET1c
+	stx C0,(I0)	// ET1c ==> ET13
+// 		if (i)
+	sub A0,NULL,A0	// 'i' == (0) -> (0)
+	nop
+	jzs F2B13	// unsigned compare
+	nop
+// jumped away
+F2B12:	// (loop lvl 2)
+// lcd0.x -= 2;
+	sub C0,D0,C0	// ET1c - ET12 -> ET1d
+	stx C0,(I0)	// ET1d ==> ET13
+F2B13:	// (loop lvl 2)
+	ldx (I4)+1,NULL	// I4 += 1
+	stx B0,(I4)	// B0 spills to #0
+	sty B1,(I4)	// B1 spills to #0
+// 		PutSmallInteger(i*12);
+	muluu A0,A1	// 'i' * ETe -> P
+	add NULL,P,B	// P -> AT38
+	add B0,NULL,C0	// AT38 lsw ET1e
+	ldx (I4),B0	// unspill B0 from #0
+	ldy (I4)-1,B1	// unspill B1 from #0
+	call _PutSmallInteger
+	nop
+// jumped away
+F2B14:	// (loop lvl 2)
+	sub A0,ONES,A0	// 'i' - (-1) -> 'i'
+F2B26:	// (loop lvl 2)
+//	(1 nop's needed)
+	nop
+// loop end
+F2B8:	// loop exit
+	ldx (I6)+1,NULL	// I6 += 1
+// 	LcdFilledRectangle(26,17,131,23,0,0x0000u);
+	and NULL,NULL,A0	// 0 -> 1 -> ET2
+	stx A0,(I6)+1	// ET2
+	and NULL,NULL,C1	// 0 -> 0 -> ET1
+	stx C1,(I6)+1	// ET1
+	ldc 23,A1	// 23 -> 1 -> ET21
+	stx A1,(I6)+1	// ET21
+	ldc 131,B1	// 131 -> 1 -> ET7
+	stx B1,(I6)+1	// ET7
+	ldc 17,B0	// 17 -> 1 -> ET22
+	stx B0,(I6)+1	// ET22
+	ldc 26,B0	// 26 -> 1 -> ETb
+	stx B0,(I6)	// ETb
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F2B15:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-6,NULL	// I6 += -6
+// 	LcdFilledRectangle(26,27,131,33,0,0x0000u);
+	stx A0,(I6)+1	// ET2
+	stx C1,(I6)+1	// ET1
+	ldc 33,C0	// 33 -> 1 -> ET23
+	stx C0,(I6)+1	// ET23
+	stx B1,(I6)+1	// ET7
+	ldc 27,B1	// 27 -> 1 -> ET24
+	stx B1,(I6)+1	// ET24
+	stx B0,(I6)	// ETb
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F2B16:
+	ldx (I6)-6,NULL	// I6 += -6
+// 	lcd0.x = 23;
+	ldc _lcd0+2,I0	// ET13
+	stx A1,(I0)	// ET21 ==> ET13
+// 	PutSmallGlyph(0x180);
+	ldc 384,C0	// 384 -> C0
+	call _PutSmallGlyph
+	nop
+// jumped away
+F2B17:
+// 	lcd0.x = 130;
+	ldc 130,A1	// 130 -> 1 -> ET26
+	stx A1,(I0)	// ET26 ==> ET13
+// 	PutSmallGlyph(0x6ba4);
+	ldc 27556,C0	// 27556 -> C0
+	call _PutSmallGlyph
+	nop
+// jumped away
+F2B18:
+// 	PutSmallGlyph(0x3aeb);
+	ldc 15083,C0	// 15083 -> C0
+	call _PutSmallGlyph
+	nop
+// jumped away
+F2B19:
+// 	lcd0.x = 20;
+	ldc 20,A1	// 20 -> 1 -> ET29
+	stx A1,(I0)	// ET29 ==> ET13
+// 	lcd0.y = 18;
+	ldc _lcd0+3,I2	// ET18
+	ldc 18,B0	// 18 -> 1 -> ET2a
+	stx B0,(I2)	// ET2a ==> ET18
+// 	PutSmallGlyph(0x7249);
+	ldc 29257,C0	// 29257 -> C0
+	call _PutSmallGlyph
+	nop
+// jumped away
+F2B20:
+// 	lcd0.x = 20;
+	stx A1,(I0)	// ET29 ==> ET13
+// 	lcd0.y = 28;
+	ldc 28,A1	// 28 -> 1 -> ET2c
+	stx A1,(I2)	// ET2c ==> ET18
+// 	PutSmallGlyph(0x5aeb);
+	ldc 23275,C0	// 23275 -> C0
+	call _PutSmallGlyph
+	nop
+// jumped away
+F2B21:
+	ldx (I6)+1,NULL	// I6 += 1
+// 	lcd0.x = 137;
+	ldc 137,A1	// 137 -> 1 -> ET2e
+	stx A1,(I0)	// ET2e ==> ET13
+// 	LcdFilledRectangle(136,31,156,38,vlsilogo,0);
+	stx A0,(I6)+1	// ET2
+	ldc _vlsilogo,A0	// ET2f
+	stx A0,(I6)+1	// ET2f
+	ldc 38,A0	// 38 -> 1 -> ET14
+	stx A0,(I6)+1	// ET14
+	ldc 156,A0	// 156 -> 1 -> ET30
+	stx A0,(I6)+1	// ET30
+	ldc 31,A0	// 31 -> 1 -> ET31
+	stx A0,(I6)+1	// ET31
+	ldc 136,A0	// 136 -> 1 -> ET32
+	stx A0,(I6)	// ET32
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F2B22:
+	ldx (I6)-6,NULL	// I6 += -6
+F2B1:
+	ldx (I6)-1,LE
+	ldy (I6),LS
+	ldx (I6)-1,LC
+	ldy (I6),I2
+	ldx (I6)-1,I0
+	ldy (I6),D1
+	ldx (I6)-1,D0
+	ldy (I6),C1
+	ldx (I6)-1,C0
+	ldy (I6),B1
+	ldx (I6)-1,B0
+	ldy (I6),A1
+	ldx (I6)-1,A0
+	ldx (I4),I6
+	ldy (I4),I4
+	ldx (I6)-1,NULL	// I6 += -1
+	ldx (I6)-1,LR0
+	jr
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect data_x,const_x	// 5 words
+	.export _linToDBTab
+_linToDBTab:
+	.word 36781, 41285, 46341, 52016, 58386
+
+	.end

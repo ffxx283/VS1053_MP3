@@ -1,0 +1,187 @@
+
+//_____________________________________________________________
+//
+	.sect code,IntToStr	// 107 words
+	.export _IntToStr
+_IntToStr:
+F0B32:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx LR0,(I6)+1
+	stx I6,(I6)
+	sty I4,(I6)
+	ldx (I6),I4
+	ldx (I6)+2,NULL	// I6 += 2
+	stx A1,(I6)
+	sty B1,(I6)+1
+	stx D0,(I6)
+	sty D1,(I6)+1
+	stx I0,(I6)
+	sty LC,(I6)+1
+	stx LS,(I6)
+	sty LE,(I6)
+	ldx (I4)+1,NULL	// I4 += 1
+	stx B0,(I4)-1	// B0 spills to #0
+F0B2:
+	ldx (I4)+1,NULL	// I4 += 1
+
+// negative
+// (i<0)
+	and NULL,NULL,A0	// 0 -> 'negative'
+	sty A0,(I4)-1	// 'negative' spills to #0
+	ldc _temps3efa0+13,I0	// 'p'
+// (C2 already up to date)
+	sub C,NULL,C	// 'i' >= (0) -> (0)
+	nop
+	jge F0B4	// signed compare
+	nop
+// jumped away
+F0B3:
+	ldx (I4)+1,NULL	// I4 += 1
+// 	}
+// {
+// 		negative=1;
+// 		i = -i;
+	sub NULL,C,C	// (0) - 'i' -> 'i'
+	sub NULL,ONES,A0	// 1 -> 'negative'
+	sty A0,(I4)-1	// 'negative' spills to #0
+F0B4:
+// 	*p = '\0';
+	and NULL,NULL,A0	// 0 -> 0 -> ET7
+	stx A0,(I0)	// ET7 ==> 'p'
+// while (i);
+	j F0B5
+	nop
+// jumped away
+F0B10:	// (loop lvl 2)
+// 		}
+// {
+// 			*--p = '.';
+	ldx (I0)-1,NULL	// 'p' += -1
+	ldc 46,A0	// 46 -> 0 -> ET12
+	stx A0,(I0)	// ET12 ==> 'p'
+F0B11:	// (loop lvl 2)
+	mv C1,C1	// update guard bits (cmp)
+	sub C,NULL,C	// 'i' == (0) -> (0)
+	nop
+	jzs F0B6	// signed compare
+	nop
+// jumped away
+F0B5:	// (loop lvl 2)
+// 	}
+// 	do {
+// 		*--p = (char)('0'+(i % 10));
+	ldc 10,D0	// 10 -> 2 -> D0
+	and NULL,NULL,D1	// 0 -> D1
+	add C,NULL,B	// 'i' -> B
+	add D,NULL,A	// ET9 -> A
+	call divide32signed
+	nop
+// jumped away
+F0B8:	// (loop lvl 2)
+	ldc 48,A0	// 48 -> A0
+	and NULL,NULL,A1	// 0 -> A1
+	add A,B,A	// ET8 + ETa -> ETb
+	ldx (I0)-1,NULL	// 'p' += -1
+	stx A0,(I0)	// ETc ==> 'p'
+// 		i /= 10L;
+	add C,NULL,B	// 'i' -> B
+	add D,NULL,A	// ET9 -> A
+	call divide32signed
+	nop
+// jumped away
+F0B9:	// (loop lvl 2)
+	ldx (I4)+1,NULL	// I4 += 1
+	add A,NULL,C	// A -> 'i'
+// 		if (!--decimalPointPosition)
+	ldx (I4),A0	// unspill 'decimalPointPosition' from #0
+	add A0,ONES,A0	// 'decimalPointPosition' + (-1) -> 'decimalPointPosition'
+	stx A0,(I4)-1	// 'decimalPointPosition' spills to #0
+	sub A0,NULL,A0	// 'decimalPointPosition' != (0) -> (0)
+	nop
+	jzc F0B11	// unsigned compare
+	nop
+// jumped away
+	j F0B10
+	nop
+// jumped away
+F0B6:
+	ldx (I4)+1,NULL	// I4 += 1
+// 	if (negative)
+	ldy (I4)-1,A0	// unspill 'negative' from #0
+	sub A0,NULL,A0	// 'negative' == (0) -> (0)
+	nop
+	jzs F0B30	// unsigned compare
+	nop
+// jumped away
+F0B12:
+// 	}
+// {
+// 		*--p='-';
+	ldx (I0)-1,NULL	// 'p' += -1
+	ldc 45,A0	// 45 -> 0 -> ET13
+	stx A0,(I0)	// ET13 ==> 'p'
+F0B31:
+	mv I0,A0	// 'p' -> 'p'
+F0B13:
+// 	}
+
+// (c<p)
+	ldc _temps3efa0,I0	// 'c'
+F0B20:
+	ldc 32,B0	// 32 -> 0 -> ET14
+F0B22:
+	mv I0,A1	// 'c' -> 'c'
+	mv I0,B1	// 'c' -> AT27
+	sub A0,B1,B1	// 'p' <= AT27 -> AT18
+	nop
+	jle F0B15	// signed compare
+	nop
+// jumped away
+F0B21:
+	add B1,ONES,B1	// AT18 + (-1) -> AT18
+	loop B1,F0B15-1
+	nop
+//loop resumes
+F0B17:	// loop entry
+F0B14:	// (loop lvl 2)
+// 		}
+// {
+// 			*c++ = ' ';
+	mv A1,I0	// 'c' -> ET15
+	stx B0,(I0)	// ET14 ==> ET15
+	sub A1,ONES,A1	// 'c' - (-1) -> 'c'
+F0B23:	// (loop lvl 2)
+//	(1 nop's needed)
+	nop
+// loop end
+F0B15:	// loop exit
+// 	return p;
+F0B1:
+	ldy (I6),LE
+	ldx (I6)-1,LS
+	ldy (I6),LC
+	ldx (I6)-1,I0
+	ldy (I6),D1
+	ldx (I6)-1,D0
+	ldy (I6),B1
+	ldx (I6)-1,A1
+	ldx (I4),I6
+	ldy (I4),I4
+	ldx (I6)-1,NULL	// I6 += -1
+	ldx (I6)-1,LR0
+	jr
+	nop
+// jumped away
+F0B30:
+	mv I0,A0	// 'p' -> 'p'
+	j F0B13
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect data_x,bss_x	// 14 words
+_temps3efa0:
+	.bss 14
+
+	.end

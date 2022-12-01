@@ -1,0 +1,155 @@
+
+//_____________________________________________________________
+//
+	.sect code,SDMInterruptHandler	// 68 words
+	.export _SDMInterruptHandler
+_SDMInterruptHandler:
+F0B8:
+	stx MR0,(I6)
+	sty I7,(I6)+1
+	stx I5,(I6)
+	sty LR1,(I6)+1
+	stx A0,(I6)
+	sty A2,(I6)+1
+	stx A1,(I6)
+	sty B0,(I6)+1
+	stx I0,(I6)
+	sty I2,(I6)
+	ldc 512,MR0	// 512 -> MR0
+F0B2:
+// sinStart
+// sinEnd
+// (beepLength)
+	ldc _beepLength,I0	// ET2
+	ldx (I0),B0/*V*/	// ET2 ==> 'beepLength'
+	ldc 28672,A0	// 28672 -> 'sinEnd'
+	ldc 24577,A1	// 24577 -> 'sinStart'
+	sub B0,NULL,B0	// 'beepLength' == (0) -> (0)
+	nop
+	jzs F0B4	// unsigned compare
+	nop
+// jumped away
+F0B3:
+// 	}
+// {
+// 		beepLength--;
+	add B0,ONES,A1	// 'beepLength' + (-1) -> ET5
+	stx A1,(I0)/*V*/	// ET5 ==> ET2
+// (*(volatile u_int16 __x *)(u_int16)(0xc04B)) =(*(volatile u_int16 __x *)(u_int16)(0xc04A)) = *sinePtr >> beepVolume;
+	ldc _sinePtrd5a320,I0	// ET6
+	ldy (I0),I2/*V*/	// ET6 ==> 'sinePtr'
+	ldy (I2),A1/*V*/	// 'sinePtr' ==> ET7
+	ldc _beepVolume,I2	// ET8
+	ldx (I2),B0/*V*/	// ET8 ==> 'beepVolume'
+	sub NULL,B0,B0	// (0) - 'beepVolume' -> ET9
+	ashl A1,B0,A1	// ET7 << ET9 -> ETa
+	ldc 49226,I2	// 49226 -> ETc
+	stx A1,(I2)/*V*/	// ETa ==> ETc
+	ldc 49227,I2	// 49227 -> ETd
+	stx A1,(I2)/*V*/	// ETa ==> ETd
+// 		if ((sinePtr+=beepTone) >= sinEnd)
+	ldy (I0),A1/*V*/	// ET6 ==> 'sinePtr'
+	ldc _beepTone,I2	// ETe
+	ldx (I2),B0/*V*/	// ETe ==> 'beepTone'
+	add A1,B0,A1	// 'sinePtr' + 'beepTone' -> ETf
+	sty A1,(I0)/*V*/	// ETf ==> ET6
+	sub A1,A0,A0	// ETf < 'sinEnd' -> AT14
+	nop
+	jlt F0B1	// signed compare
+	nop
+// jumped away
+F0B6:
+// sinePtr -= 2*2048;
+	ldy (I0),A0/*V*/	// ET6 ==> 'sinePtr'
+	ldc 4096,A1	// 4096 -> 0 -> ET10
+	sub A0,A1,A0	// 'sinePtr' - ET10 -> ET11
+	sty A0,(I0)/*V*/	// ET11 ==> ET6
+F0B1:
+	ldy (I6),I2
+	ldx (I6)-1,I0
+	ldy (I6),B0
+	ldx (I6)-1,A1
+	ldy (I6),A2
+	ldx (I6)-1,A0
+	ldy (I6),LR1
+	ldx (I6)-1,I5
+
+	ldx (I6),MR0	// return from interrupt
+	ldc INT_GLOB_ENA,I7
+	reti
+	stx I7,(I7) ; ldy (I6)-1,I7
+
+// jumped away
+F0B4:
+// 	}
+// else {
+// (*(volatile u_int16 __x *)(u_int16)(0xc04A)) = 0;
+	ldc 49226,I0	// 49226 -> ETc
+	and NULL,NULL,A0	// 0 -> 1 -> ET12
+	stx A0,(I0)/*V*/	// ET12 ==> ETc
+// (*(volatile u_int16 __x *)(u_int16)(0xc04B)) = 0;
+	ldc 49227,I0	// 49227 -> ETd
+	stx A0,(I0)/*V*/	// ET12 ==> ETd
+// 		sinePtr = sinStart;
+	ldc _sinePtrd5a320,I0	// ET6
+	sty A1,(I0)/*V*/	// 'sinStart' ==> ET6
+	j F0B1
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect interrupt_41,int_SDMInterruptHandler	// 1 word
+	.export int_SDMInterruptHandler
+int_SDMInterruptHandler:
+	jmpi _SDMInterruptHandler,(I6)+1
+
+//_____________________________________________________________
+//
+	.sect code,SDMBeepInit	// 17 words
+	.export _SDMBeepInit
+_SDMBeepInit:
+F1B3:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx A0,(I6)
+	sty A1,(I6)+1
+	stx I0,(I6)
+F1B2:
+// (*(volatile u_int16 __x *)(u_int16)(0xc049)) =(1<<12) |(128-1);
+	ldc 49225,I0	// 49225 -> ET1
+	ldc 4223,A0	// 4223 -> 1 -> ET0
+	stx A0,(I0)/*V*/	// ET0 ==> ET1
+// (*(volatile u_int16 __x *)(u_int16)(0xC01A)) |= (1<< 9);
+	ldc 49178,I0	// 49178 -> ET3
+	ldx (I0),A1/*V*/	// ET3 ==> ET4
+	ldc 512,A0	// 512 -> 1 -> ET2
+	or A1,A0,A0	// ET4 or ET2 -> ET5
+	stx A0,(I0)/*V*/	// ET5 ==> ET3
+F1B1:
+	ldx (I6)-1,I0
+	ldy (I6),A1
+	ldx (I6)-1,A0
+	jr
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect data_x,init_x	// 3 words
+	.export _beepLength
+_beepLength:
+	.word 0
+	.export _beepVolume
+_beepVolume:
+	.word 3
+	.export _beepTone
+_beepTone:
+	.word 128
+
+//_____________________________________________________________
+//
+	.sect data_y,init_y	// 1 word
+_sinePtrd5a320:
+	.word 24577
+
+	.end

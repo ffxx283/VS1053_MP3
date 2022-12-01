@@ -1,0 +1,850 @@
+
+//_____________________________________________________________
+//
+	.sect code,ScreenUpdate	// 119 words
+	.export _ScreenUpdate
+_ScreenUpdate:
+F0B15:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx LR0,(I6)+1
+	stx I6,(I6)
+	sty I4,(I6)
+	ldx (I6),I4
+	ldx (I6)+1,NULL	// I6 += 1
+	stx A0,(I6)
+	sty A1,(I6)+1
+	stx B0,(I6)
+	sty B1,(I6)+1
+	stx C0,(I6)
+	sty C1,(I6)+1
+	stx I0,(I6)
+	sty I1,(I6)+1
+	stx I2,(I6)
+F0B2:
+	ldx (I6)+1,NULL	// I6 += 1
+// 	lcd0.x = 10;
+	ldc _lcd0+2,I0	// ET3
+	ldc 10,A1	// 10 -> 1 -> ET0
+	stx A1,(I0)	// ET0 ==> ET3
+// 	lcd0.y = 10;
+	ldx (I0)+1,NULL	// ET3 += 1
+	stx A1,(I0)	// ET0 ==> ET3
+// 	LcdPutString("Volume: ");
+	ldc volume_1,A0	// ET6
+	stx A0,(I6)	// ET6
+	ldc _lcd0+3,I2	// ET5
+	call _LcdPutString
+	nop
+// jumped away
+F0B3:
+	ldx (I0)-1,NULL	// ET3 += -1
+	ldx (I6)-1,NULL	// I6 += -1
+// 	LcdPutString(IntToStr(dacVolume,0));
+	ldc _dacVolume,I1	// ET9
+	ldx (I1),A0/*V*/	// ET9 ==> 'dacVolume'
+	sub NULL,ONES,B1	// 1 -> 0 -> ET8
+	mulss A0,B1	// 'dacVolume' sXtd ET8 -> P
+	add NULL,P,C	// P -> ETa
+	and NULL,NULL,B0	// 0 -> B0
+	call _IntToStr
+	nop
+// jumped away
+F0B4:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx A0,(I6)	// ETb
+	call _LcdPutString
+	nop
+// jumped away
+F0B5:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-1,NULL	// I6 += -1
+// 	LcdPutString(" dB  ");
+	ldc db_2,A0	// ETc
+	stx A0,(I6)	// ETc
+	call _LcdPutString
+	nop
+// jumped away
+F0B6:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-1,NULL	// I6 += -1
+// 	lcd0.x = 10;
+	stx A1,(I0)	// ET0 ==> ET3
+// 	lcd0.y = 20;
+	ldc 20,A0	// 20 -> 1 -> ETd
+	stx A0,(I2)	// ETd ==> ET5
+// 	LcdPutString("FM: ");
+	ldc fm_3,A0	// ETe
+	stx A0,(I6)	// ETe
+	call _LcdPutString
+	nop
+// jumped away
+F0B7:
+	ldx (I6)-1,NULL	// I6 += -1
+// 	LcdPutString(IntToStr(fm_freq,2));
+	ldc _fm_freq,I1	// ETf
+	ldx (I1),C0/*V*/	// ETf ==> 'fm_freq'
+	and C1,NULL,C1
+	ldc 2,B0	// 2 -> B0
+	call _IntToStr
+	nop
+// jumped away
+F0B8:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx A0,(I6)	// ET11
+	call _LcdPutString
+	nop
+// jumped away
+F0B9:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-1,NULL	// I6 += -1
+// 	LcdPutString(" MHz  ");
+	ldc mhz_4,A0	// ET12
+	stx A0,(I6)	// ET12
+	call _LcdPutString
+	nop
+// jumped away
+F0B10:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-1,NULL	// I6 += -1
+// 	lcd0.x = 10;
+	stx A1,(I0)	// ET0 ==> ET3
+// 	lcd0.y = 30;
+	ldc 30,A0	// 30 -> 1 -> ET13
+	stx A0,(I2)	// ET13 ==> ET5
+// 	LcdPutString("Boost: ");
+	ldc boost_5,A0	// ET14
+	stx A0,(I6)	// ET14
+	call _LcdPutString
+	nop
+// jumped away
+F0B11:
+	ldx (I6)-1,NULL	// I6 += -1
+// 	LcdPutString(IntToStr(boostShift*6,0));
+	ldc _boostShift,I0	// ET15
+	ldx (I0),A1/*V*/	// ET15 ==> ET16
+	ldc 6,A0	// 6 -> 0 -> ET17
+	mulss A1,A0	// ET16 * ET17 -> P
+	add NULL,P,A	// P -> AT1d
+	mulss A0,B1	// ET18 sXtd ET8 -> P
+	add NULL,P,A	// P -> ET19
+	add A,NULL,C	// ET19 -> C
+	and NULL,NULL,B0	// 0 -> B0
+	call _IntToStr
+	nop
+// jumped away
+F0B12:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx A0,(I6)	// ET1a
+	call _LcdPutString
+	nop
+// jumped away
+F0B13:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-1,NULL	// I6 += -1
+// 	LcdPutString(" dB  ");
+	ldc db_2,A0	// ETc
+	stx A0,(I6)	// ETc
+	call _LcdPutString
+	nop
+// jumped away
+F0B14:
+	ldx (I6)-1,NULL	// I6 += -1
+F0B1:
+	ldx (I6)-1,I2
+	ldy (I6),I1
+	ldx (I6)-1,I0
+	ldy (I6),C1
+	ldx (I6)-1,C0
+	ldy (I6),B1
+	ldx (I6)-1,B0
+	ldy (I6),A1
+	ldx (I6)-1,A0
+	ldx (I4),I6
+	ldy (I4),I4
+	ldx (I6)-1,NULL	// I6 += -1
+	ldx (I6)-1,LR0
+	jr
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect code,ScreenRefresh	// 126 words
+	.export _ScreenRefresh
+_ScreenRefresh:
+F1B15:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx LR0,(I6)+1
+	stx I6,(I6)
+	sty I4,(I6)
+	ldx (I6),I4
+	ldx (I6)+1,NULL	// I6 += 1
+	stx A0,(I6)
+	sty A1,(I6)+1
+	stx B0,(I6)
+	sty B1,(I6)+1
+	stx C0,(I6)
+	sty C1,(I6)+1
+	stx D0,(I6)
+	sty I0,(I6)+1
+	stx I1,(I6)
+	sty I2,(I6)+1
+	stx I3,(I6)
+F1B2:
+	ldx (I6)+1,NULL	// I6 += 1
+// 	LcdFilledRectangle(0,0,159,127,0,lcd0.backgroundColor);
+	ldc _lcd0+5,I0	// ET2
+	ldx (I0),A0	// ET2 ==> 5 -> ET3
+	stx A0,(I6)+1	// ET3
+	and NULL,NULL,A0	// 0 -> 0 -> ET4
+	stx A0,(I6)+1	// ET4
+	ldc 127,A1	// 127 -> 1 -> ET5
+	stx A1,(I6)+1	// ET5
+	ldc 159,A1	// 159 -> 1 -> ET6
+	stx A1,(I6)+1	// ET6
+	and NULL,NULL,B0	// 0 -> 1 -> ET7
+	stx B0,(I6)+1	// ET7
+	stx B0,(I6)	// ET7
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F1B3:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-6,NULL	// I6 += -6
+// 	LcdFilledRectangle(5,3,154,38,0,((((128)>>3)<<11)|((((128)>>2)&0x3f)<<5)|(((128)>>3)&0x1f)));
+	ldc 33808,C1	// 33808 -> 1 -> ET8
+	stx C1,(I6)+1	// ET8
+	stx A0,(I6)+1	// ET4
+	ldc 38,D0	// 38 -> 1 -> ET9
+	stx D0,(I6)+1	// ET9
+	ldc 154,C0	// 154 -> 1 -> ETa
+	stx C0,(I6)+1	// ETa
+	ldc 3,A1	// 3 -> 1 -> ETb
+	stx A1,(I6)+1	// ETb
+	ldc 5,A1	// 5 -> 1 -> ET1
+	stx A1,(I6)	// ET1
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F1B4:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-6,NULL	// I6 += -6
+// 	LcdFilledRectangle(6,4,154,38,0,((((192)>>3)<<11)|((((192)>>2)&0x3f)<<5)|(((192)>>3)&0x1f)));
+	ldc 50712,B1	// 50712 -> 1 -> ETc
+	stx B1,(I6)+1	// ETc
+	stx A0,(I6)+1	// ET4
+	stx D0,(I6)+1	// ET9
+	stx C0,(I6)+1	// ETa
+	ldc 4,C0	// 4 -> 1 -> ETd
+	stx C0,(I6)+1	// ETd
+	ldc 6,C0	// 6 -> 1 -> ETe
+	stx C0,(I6)	// ETe
+	call _LcdFilledRectangle
+	nop
+// jumped away
+F1B5:
+	ldx (I6)-6,NULL	// I6 += -6
+// 	lcd0.textColor =((((128)>>3)<<11)|((((128)>>2)&0x3f)<<5)|(((128)>>3)&0x1f));
+	ldc _lcd0+4,I1	// ETf
+	stx C1,(I1)	// ET8 ==> ETf
+// 	lcd0.originY = 42;
+	ldx (I1)+3,NULL	// ETf += 3
+	ldc 42,C0	// 42 -> 1 -> ET10
+	stx C0,(I1)	// ET10 ==> ETf
+// 	DrawSoundPressureArea();
+	ldc _lcd0+7,I3	// ET12
+	call _DrawSoundPressureArea
+	nop
+// jumped away
+F1B6:
+	ldx (I1)-3,NULL	// ETf += -3
+// 	lcd0.x = 2;
+	ldc _lcd0+2,I2	// ET14
+	ldc 2,C1	// 2 -> 1 -> ET13
+	stx C1,(I2)	// ET13 ==> ET14
+// lcd0.y = 5;
+	ldx (I2)+1,NULL	// ET14 += 1
+	stx A1,(I2)	// ET1 ==> ET14
+// 	PutSmallGlyph(0x4904);
+	ldc 18692,C0	// 18692 -> C0
+	call _PutSmallGlyph
+	nop
+// jumped away
+F1B7:
+	ldx (I2)-1,NULL	// ET14 += -1
+// 	PutSmallGlyph(0x5ac0);
+	ldc 23232,C0	// 23232 -> C0
+	call _PutSmallGlyph
+	nop
+// jumped away
+F1B8:
+// 	lcd0.originY = 85;
+	ldc 85,C0	// 85 -> 1 -> ET18
+	stx C0,(I3)	// ET18 ==> ET12
+// 	lcd0.x = 2;
+	stx C1,(I2)	// ET13 ==> ET14
+// lcd0.y = 5;
+	ldc _lcd0+3,I2	// ET15
+	stx A1,(I2)	// ET1 ==> ET15
+// 	PutSmallGlyph(0x7bc0);
+	ldc 31680,C0	// 31680 -> C0
+	call _PutSmallGlyph
+	nop
+// jumped away
+F1B9:
+// 	PutSmallGlyph(0x7b40);
+	ldc 31552,C0	// 31552 -> C0
+	call _PutSmallGlyph
+	nop
+// jumped away
+F1B10:
+// 	PutSmallGlyph(0x72c9);
+	ldc 29385,C0	// 29385 -> C0
+	call _PutSmallGlyph
+	nop
+// jumped away
+F1B11:
+// 	DrawSoundPressureArea();
+	call _DrawSoundPressureArea
+	nop
+// jumped away
+F1B12:
+// 	lcd0.textColor =((((64)>>3)<<11)|((((64)>>2)&0x3f)<<5)|(((64)>>3)&0x1f));
+	ldc 16904,A1	// 16904 -> 1 -> ET1c
+	stx A1,(I1)	// ET1c ==> ETf
+// 	lcd0.backgroundColor =((((192)>>3)<<11)|((((192)>>2)&0x3f)<<5)|(((192)>>3)&0x1f));
+	stx B1,(I0)	// ETc ==> ET2
+// 	lcd0.originY = 0;
+	stx B0,(I3)	// ET7 ==> ET12
+// 	dacVolume = 0;
+	ldc _dacVolume,I0	// ET1d
+	stx A0,(I0)/*V*/	// ET4 ==> ET1d
+// 	SetDacVolume(dacVolume);
+	add A0,NULL,C0	// ET4 -> C0
+	call _SetDacVolume
+	nop
+// jumped away
+F1B13:
+// 	ScreenUpdate();
+	call _ScreenUpdate
+	nop
+// jumped away
+F1B1:
+	ldx (I6)-1,I3
+	ldy (I6),I2
+	ldx (I6)-1,I1
+	ldy (I6),I0
+	ldx (I6)-1,D0
+	ldy (I6),C1
+	ldx (I6)-1,C0
+	ldy (I6),B1
+	ldx (I6)-1,B0
+	ldy (I6),A1
+	ldx (I6)-1,A0
+	ldx (I4),I6
+	ldy (I4),I4
+	ldx (I6)-1,NULL	// I6 += -1
+	ldx (I6)-1,LR0
+	jr
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect code,main	// 272 words
+	.export _main
+_main:
+F2B48:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx LR0,(I6)
+	j F2B2
+	nop
+// jumped away
+F2B2:
+// (*(volatile u_int16 __x *)(u_int16)(0xC003)) = 0x6000;
+	ldc 49155,I0	// 49155 -> ET1
+	ldc 24576,A0	// 24576 -> 1 -> ET0
+	stx A0,(I0)/*V*/	// ET0 ==> ET1
+// 	InitHardware();
+	ldx (I6)+1,NULL	// I6 += 1
+	call _InitHardware
+	nop
+// jumped away
+	j F2B3
+	nop
+// jumped away
+F2B3:
+	ldx (I6)+1,NULL	// I6 += 1
+// (*(volatile u_int16 __x *)(u_int16)(0xC00B)) = 0x0000;
+	ldc 49163,I0	// 49163 -> ET3
+	and NULL,NULL,A0	// 0 -> 1 -> ET2
+	stx A0,(I0)/*V*/	// ET2 ==> ET3
+// (*(volatile u_int16 __x *)(u_int16)(0xC017)) = ~(1 << 2);
+	ldc 49175,I0	// 49175 -> ET5
+	ldc 65531,A1	// 65531 -> 1 -> ET4
+	stx A1,(I0)/*V*/	// ET4 ==> ET5
+// (*(volatile u_int16 __x *)(u_int16)(0xC019)) = ~(1 << 2);
+	ldc 49177,I0	// 49177 -> ET6
+	stx A1,(I0)/*V*/	// ET4 ==> ET6
+// 	LcdDelay(1000);
+	ldc 1000,B0	// 1000 -> 3 -> B0
+	and NULL,NULL,B1	// 0 -> B1
+	stx B0,(I6)+1	// B0
+	stx B1,(I6)	// B1
+	call _LcdDelay
+	nop
+// jumped away
+	j F2B4
+	nop
+// jumped away
+F2B4:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-2,NULL	// I6 += -2
+// (*(volatile u_int16 __x *)(u_int16)(0xC015)) = 0;
+	ldc 49173,I0	// 49173 -> ET8
+	stx A0,(I0)/*V*/	// ET2 ==> ET8
+// (*(volatile u_int16 __x *)(u_int16)(0xC016)) = 0;
+	ldc 49174,I0	// 49174 -> ET9
+	stx A0,(I0)/*V*/	// ET2 ==> ET9
+// (*(volatile u_int16 __x *)(u_int16)(0xC001)) &= ~(1<< 2);
+	ldc 49153,I0	// 49153 -> ETa
+	ldx (I0),C0/*V*/	// ETa ==> ETb
+	and C0,A1,A1	// ETb and ET4 -> ETc
+	stx A1,(I0)/*V*/	// ETc ==> ETa
+// 	LcdDelay(1000);
+	stx B0,(I6)+1	// B0
+	stx B1,(I6)	// B1
+	call _LcdDelay
+	nop
+// jumped away
+	j F2B5
+	nop
+// jumped away
+F2B5:
+	ldx (I6)+1,NULL	// I6 += 1
+	ldx (I6)-2,NULL	// I6 += -2
+// (*(volatile u_int16 __x *)(u_int16)(0xC001)) &= ~(1<< 3);
+	ldx (I0),A1/*V*/	// ETa ==> ETe
+	ldc 65527,B0	// 65527 -> 1 -> ETd
+	and A1,B0,A1	// ETe and ETd -> ETf
+	stx A1,(I0)/*V*/	// ETf ==> ETa
+// 	LcdInit(0);
+	stx A0,(I6)	// ET2
+	call _LcdInit
+	nop
+// jumped away
+	j F2B6
+	nop
+// jumped away
+F2B6:
+	ldx (I6)-1,NULL	// I6 += -1
+// 	ScreenRefresh();
+	call _ScreenRefresh
+	nop
+// jumped away
+	j F2B7
+	nop
+// jumped away
+F2B7:
+	ldx (I6)+1,NULL	// I6 += 1
+// 	I2CSetFM(fm_freq);
+	ldc _fm_freq,I0	// ET11
+	ldx (I0),A0/*V*/	// ET11 ==> 'fm_freq'
+	stx A0,(I6)	// 'fm_freq'
+	call _I2CSetFM
+	nop
+// jumped away
+	j F2B8
+	nop
+// jumped away
+F2B8:
+	ldx (I6)-1,NULL	// I6 += -1
+// 	InitAudioPath();
+	call _InitAudioPath
+	nop
+// jumped away
+	j F2B9
+	nop
+// jumped away
+F2B9:
+// 	SDMBeepInit();
+	call _SDMBeepInit
+	nop
+// jumped away
+	j F2B14
+	nop
+// jumped away
+F2B14:
+	j F2B11
+	nop
+// jumped away
+F2B11:
+// 	}
+// {
+// 		if (sampleCounter16 > 200)
+	ldc _sampleCounter16,I0	// ET13
+	ldx (I0),A1/*V*/	// ET13 ==> ET14
+	ldc 200,A0	// 200 -> 1 -> ET15
+	sub A0,A1,A0	// ET15 > ET14 -> AT3a
+	nop
+	jcc F2B15	// unsigned compare
+	nop
+// jumped away
+	j F2B14
+	nop
+// jumped away
+F2B15:
+// 		}
+// = 0;
+	and NULL,NULL,A0	// 0 -> 1 -> ET2
+	stx A0,(I0)/*V*/	// ET2 ==> ET13
+// 			lcd0.originY = 42;
+	ldc _lcd0+7,I0	// ET19
+	ldc 42,A1	// 42 -> 1 -> ET16
+	stx A1,(I0)	// ET16 ==> ET19
+// DrawSoundPressureBars(stereoSampleIn,inLevels);
+	ldc _stereoSampleIn,I2	// I2
+	ldc _inLevels,I1	// I1
+	call _DrawSoundPressureBars
+	nop
+// jumped away
+	j F2B17
+	nop
+// jumped away
+F2B17:
+// 			lcd0.originY = 85;
+	ldc 85,A1	// 85 -> 1 -> ET1c
+	stx A1,(I0)	// ET1c ==> ET19
+// DrawSoundPressureBars(stereoSampleOut,outLevels);
+	ldc _stereoSampleOut,I2	// I2
+	ldc _outLevels,I1	// I1
+	call _DrawSoundPressureBars
+	nop
+// jumped away
+	j F2B18
+	nop
+// jumped away
+F2B18:
+// 			lcd0.originY = 0;
+	stx A0,(I0)	// ET2 ==> ET19
+// 			key = GetKeyPress();
+	call _GetKeyPress
+	nop
+// jumped away
+	j F2B19
+	nop
+// jumped away
+F2B19:
+// 			if (key)
+	sub A0,NULL,A0	// 'key' != (0) -> (0)
+	nop
+	jzc F2B20	// unsigned compare
+	nop
+// jumped away
+	j F2B14
+	nop
+// jumped away
+F2B20:
+// 			}
+// {
+// 				beepLength = 512;
+	ldc _beepLength,I0	// ET21
+	ldc 512,A1	// 512 -> 1 -> ET20
+	stx A1,(I0)/*V*/	// ET20 ==> ET21
+// 				switch(key)
+	ldc 273,A1	// 273 -> 1 -> ET22
+	sub A0,A1,A1	// 'key' == ET22 -> AT3c
+	nop
+	jzs F2B23	// unsigned compare
+	nop
+// jumped away
+	j F2B24
+	nop
+// jumped away
+F2B23:
+	ldx (I6)+1,NULL	// I6 += 1
+// 					}
+// {
+// 						fm_freq -= 5;
+	ldc _fm_freq,I0	// ET11
+	ldx (I0),A0/*V*/	// ET11 ==> 'fm_freq'
+	ldc 5,A1	// 5 -> 1 -> ET23
+	sub A0,A1,A0	// 'fm_freq' - ET23 -> ET24
+	stx A0,(I0)/*V*/	// ET24 ==> ET11
+// 						I2CSetFM(fm_freq);
+	stx A0,(I6)	// ET24
+	call _I2CSetFM
+	nop
+// jumped away
+	j F2B25
+	nop
+// jumped away
+F2B25:
+	ldx (I6)-1,NULL	// I6 += -1
+// 						break;
+	j F2B22
+	nop
+// jumped away
+F2B22:
+// 				ScreenUpdate();
+	call _ScreenUpdate
+	nop
+// jumped away
+	j F2B14
+	nop
+// jumped away
+F2B24:
+	ldc 128,A1	// 128 -> 1 -> ET25
+	sub A0,A1,A1	// 'key' == ET25 -> AT3d
+	nop
+	jzs F2B26	// unsigned compare
+	nop
+// jumped away
+	j F2B27
+	nop
+// jumped away
+F2B26:
+	ldx (I6)+1,NULL	// I6 += 1
+// 					}
+// {
+// 						fm_freq += 5;
+	ldc _fm_freq,I0	// ET11
+	ldx (I0),A1/*V*/	// ET11 ==> 'fm_freq'
+	ldc 5,A0	// 5 -> 1 -> ET23
+	add A1,A0,A0	// 'fm_freq' + ET23 -> ET26
+	stx A0,(I0)/*V*/	// ET26 ==> ET11
+// 						I2CSetFM(fm_freq);
+	stx A0,(I6)	// ET26
+	call _I2CSetFM
+	nop
+// jumped away
+	j F2B28
+	nop
+// jumped away
+F2B28:
+	ldx (I6)-1,NULL	// I6 += -1
+// 						break;
+	j F2B22
+	nop
+// jumped away
+F2B27:
+	ldc 2184,A1	// 2184 -> 1 -> ET27
+	sub A0,A1,A1	// 'key' == ET27 -> AT3e
+	nop
+	jzs F2B29	// unsigned compare
+	nop
+// jumped away
+	j F2B30
+	nop
+// jumped away
+F2B29:
+	ldx (I6)+1,NULL	// I6 += 1
+// 					}
+// {
+// 						fm_freq -= 100;
+	ldc _fm_freq,I0	// ET11
+	ldx (I0),A0/*V*/	// ET11 ==> 'fm_freq'
+	ldc 100,A1	// 100 -> 1 -> ET28
+	sub A0,A1,A0	// 'fm_freq' - ET28 -> ET29
+	stx A0,(I0)/*V*/	// ET29 ==> ET11
+// 						I2CSetFM(fm_freq);
+	stx A0,(I6)	// ET29
+	call _I2CSetFM
+	nop
+// jumped away
+	j F2B31
+	nop
+// jumped away
+F2B31:
+	ldx (I6)-1,NULL	// I6 += -1
+// 						break;
+	j F2B22
+	nop
+// jumped away
+F2B30:
+	ldc 8,A1	// 8 -> 1 -> ET2a
+	sub A0,A1,A1	// 'key' == ET2a -> AT3f
+	nop
+	jzs F2B32	// unsigned compare
+	nop
+// jumped away
+	j F2B33
+	nop
+// jumped away
+F2B32:
+	ldx (I6)+1,NULL	// I6 += 1
+// 					}
+// {
+// 						fm_freq += 100;
+	ldc _fm_freq,I0	// ET11
+	ldx (I0),A1/*V*/	// ET11 ==> 'fm_freq'
+	ldc 100,A0	// 100 -> 1 -> ET28
+	add A1,A0,A0	// 'fm_freq' + ET28 -> ET2b
+	stx A0,(I0)/*V*/	// ET2b ==> ET11
+// 						I2CSetFM(fm_freq);
+	stx A0,(I6)	// ET2b
+	call _I2CSetFM
+	nop
+// jumped away
+	j F2B34
+	nop
+// jumped away
+F2B34:
+	ldx (I6)-1,NULL	// I6 += -1
+// 						break;
+	j F2B22
+	nop
+// jumped away
+F2B33:
+	ldc 64,A1	// 64 -> 1 -> ET2c
+	sub A0,A1,A1	// 'key' == ET2c -> AT40
+	nop
+	jzs F2B35	// unsigned compare
+	nop
+// jumped away
+	j F2B36
+	nop
+// jumped away
+F2B35:
+// 					}
+// {
+// 						dacVolume--;
+	ldc _dacVolume,I0	// ET2d
+	ldx (I0),A0/*V*/	// ET2d ==> 'dacVolume'
+	add A0,ONES,C0	// 'dacVolume' + (-1) -> ET30
+	stx C0,(I0)/*V*/	// ET30 ==> ET2d
+// 						SetDacVolume(dacVolume);
+	call _SetDacVolume
+	nop
+// jumped away
+	j F2B22
+	nop
+// jumped away
+F2B36:
+	sub NULL,ONES,A1	// 1 -> 1 -> ET31
+	sub A0,A1,A1	// 'key' == ET31 -> AT41
+	nop
+	jzs F2B38	// unsigned compare
+	nop
+// jumped away
+	j F2B39
+	nop
+// jumped away
+F2B38:
+// 					}
+// {
+// 						if (dacVolume < 0)
+	ldc _dacVolume,I0	// ET2d
+	ldx (I0),A0/*V*/	// ET2d ==> 'dacVolume'
+	sub A0,NULL,A0	// 'dacVolume' < (0) -> (0)
+	nop
+	jlt F2B40	// signed compare
+	nop
+// jumped away
+	j F2B41
+	nop
+// jumped away
+F2B40:
+// 						}
+// {
+// 							dacVolume++;
+	sub A0,ONES,A0	// 'dacVolume' - (-1) -> ET33
+	stx A0,(I0)/*V*/	// ET33 ==> ET2d
+	j F2B41
+	nop
+// jumped away
+F2B41:
+// 						SetDacVolume(dacVolume);
+	ldc _dacVolume,I0	// ET2d
+	ldx (I0),C0/*V*/	// ET2d ==> 'dacVolume'
+	call _SetDacVolume
+	nop
+// jumped away
+	j F2B22
+	nop
+// jumped away
+F2B39:
+	ldc 16,A1	// 16 -> 1 -> ET34
+	sub A0,A1,A0	// 'key' == ET34 -> AT43
+	nop
+	jzs F2B43	// unsigned compare
+	nop
+// jumped away
+	j F2B22
+	nop
+// jumped away
+F2B43:
+// 					}
+// {
+// 						boostShift++;
+	ldc _boostShift,I0	// ET35
+	ldx (I0),A0/*V*/	// ET35 ==> 'boostShift'
+	sub A0,ONES,A0	// 'boostShift' - (-1) -> ET37
+	stx A0,(I0)/*V*/	// ET37 ==> ET35
+// 						if (boostShift > 2)
+	ldc 2,A1	// 2 -> 0 -> ET38
+	sub A0,A1,A0	// ET37 > ET38 -> AT44
+	nop
+	jgt F2B44	// signed compare
+	nop
+// jumped away
+	j F2B22
+	nop
+// jumped away
+F2B44:
+// 						}
+// {
+// 							boostShift = -2;
+	ldc -2,A0	// -2 -> 0 -> ET39
+	stx A0,(I0)/*V*/	// ET39 ==> ET35
+	j F2B22
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect data_x,init_x	// 5 words
+	.export _outLevels
+_outLevels:
+	.zero 1
+	.zero 1
+	.export _inLevels
+_inLevels:
+	.zero 1
+	.zero 1
+	.export _fm_freq
+_fm_freq:
+	.word 8900
+
+//_____________________________________________________________
+//
+	.sect data_x,bss_x	// 1 word
+	.export _dacVolume
+_dacVolume:
+	.bss 1
+
+//_____________________________________________________________
+//
+	.sect data_x,const_x	// 35 words
+volume_1:
+	.word "Volume: "
+
+	.zero 1
+db_2:
+	.word " dB  "
+
+	.zero 1
+fm_3:
+	.word "FM: "
+
+	.zero 1
+mhz_4:
+	.word " MHz  "
+
+	.zero 1
+boost_5:
+	.word "Boost: "
+
+	.zero 1
+
+	.end

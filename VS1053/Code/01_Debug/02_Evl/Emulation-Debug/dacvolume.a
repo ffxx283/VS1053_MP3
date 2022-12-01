@@ -1,0 +1,88 @@
+
+//_____________________________________________________________
+//
+	.sect code,SetDacVolume	// 53 words
+	.export _SetDacVolume
+_SetDacVolume:
+F0B14:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx LR0,(I6)+1
+	stx A0,(I6)
+	sty A1,(I6)+1
+	stx B0,(I6)
+	sty B1,(I6)+1
+	stx C1,(I6)
+	sty I0,(I6)
+F0B2:
+// (volume > 0)
+	sub C0,NULL,C0	// 'volume' > (0) -> (0)
+	nop
+	jgt F0B3	// signed compare
+	nop
+// jumped away
+F0B4:
+// else if (volume < -90)
+	ldc -90,A0	// -90 -> 0 -> ET1
+	sub C0,A0,B1	// 'volume' >= ET1 -> AT13
+	nop
+	jge F0B5	// signed compare
+	nop
+// jumped away
+F0B6:
+// 	}
+// {
+// 		volume = -90;
+	ldc -90,C0	// -90 -> 'volume'
+F0B5:
+// 	t = volume + 96;
+	ldc 96,B0	// 96 -> 0 -> ET2
+	add C0,B0,C0	// 'volume' + ET2 -> 't'
+// 	attCoarse = 16-t/6;
+	ldc 6,B1	// 6 -> 0 -> ET5
+	add C0,NULL,B0	// 't' -> B0
+	add B1,NULL,A0	// ET5 -> A0
+	call divide16signed
+	nop
+// jumped away
+	ldc 16,C1	// 16 -> 0 -> ET4
+F0B8:
+	add A0,NULL,B0	// A0 -> ET6
+	sub C1,B0,C1	// ET4 - ET6 -> 'attCoarse'
+// 	attFine = (t%6)*2;
+	add C0,NULL,B0	// 't' -> B0
+	add B1,NULL,A0	// ET5 -> A0
+	call divide16signed
+	nop
+// jumped away
+F0B9:
+	add A1,A1,A0	// ET8 + ET8 -> 'attFine'
+// (*(volatile u_int16 __x *)(u_int16)(0xc045)) = 257*(attCoarse + (attFine<<4));
+	ldc 4,A1	// 4 -> 0 -> ETc
+	ashl A0,A1,A0	// 'attFine' << ETc -> ETd
+	add C1,A0,A0	// 'attCoarse' + ETd -> ETe
+	ldc 257,A1	// 257 -> 0 -> ETb
+	mulss A1,A0	// ETb * ETe -> P
+	add NULL,P,A	// P -> AT1f
+	ldc 49221,I0	// 49221 -> ET11
+	stx A0,(I0)/*V*/	// ETf ==> ET11
+F0B1:
+	ldy (I6),I0
+	ldx (I6)-1,C1
+	ldy (I6),B1
+	ldx (I6)-1,B0
+	ldy (I6),A1
+	ldx (I6)-1,A0
+	ldx (I6)-1,LR0
+	jr
+	nop
+// jumped away
+F0B3:
+// 	}
+// {
+// 		volume = 0;
+	and NULL,NULL,C0	// 0 -> 'volume'
+	j F0B5
+	nop
+// jumped away
+
+	.end

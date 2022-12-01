@@ -1,0 +1,76 @@
+
+//_____________________________________________________________
+//
+	.sect code,main	// 39 words
+	.export _main
+_main:
+
+// {(*(volatile u_int16 __x *)(u_int16)(0xC017)) |= (((1 << 6)));
+	ldc 64,A1	// 64 -> 1 -> ET0
+	ldc 49175,I0	// 49175 -> ET1
+	ldx (I0),A0/*V*/	// ET1 ==> ET2
+	or A0,A1,A0	// ET2 or ET0 -> ET3
+	ldc 63487,A1	// 63487 -> 1 -> ET4
+	stx A0,(I0)/*V*/	// ET3 ==> ET1
+
+// ;
+// {(*(volatile u_int16 __x *)(u_int16)(0xC017)) &= ~(((1 << 11)));
+	ldx (I0),A0/*V*/	// ET1 ==> ET5
+	and A0,A1,A0	// ET5 and ET4 -> ET6
+	stx A0,(I0)/*V*/	// ET6 ==> ET1
+// ;
+// (*(volatile u_int16 __x *)(u_int16)(0xC017)) |= ((1<<8));
+	ldc 256,A0	// 256 -> 1 -> ET7
+	ldx (I0),A1/*V*/	// ET1 ==> ET8
+	or A1,A0,A1	// ET8 or ET7 -> ET9
+	stx A1,(I0)+2/*V*/	// ET9 ==> ET1
+// (*(volatile u_int16 __x *)(u_int16)(0xC019)) |= ((1<<8));
+	ldx (I0),A1/*V*/	// ETa ==> ETb
+	or A1,A0,A0	// ETb or ET7 -> ETc
+// 	while (1)
+F0B6:
+	ldc 2048,A1	// 2048 -> 1 -> ET11
+	stx A0,(I0)/*V*/	// ETc ==> ETa
+// 	}
+// {
+// 		if ( ((*(volatile u_int16 __x *)(u_int16)(0xC018))) &(1 << 11)  )
+	ldc 49176,I0	// 49176 -> ETe
+	ldx (I0)+1,A0/*V*/	// ETe ==> ETf
+	and A0,A1,A0	// ETf and ET11 -> ET12
+	ldc 65471,A0	// 65471 -> 1 -> ET19
+	jzs F0B8	// compare against zero
+	nop
+// jumped away
+// 		}
+
+// {
+// {(*(volatile u_int16 __x *)(u_int16)(0xC019)) |= (((1 << 6)));
+	ldc 49175,I2	// 49175 -> ET1
+	ldc 64,A0	// 64 -> 1 -> ET0
+	ldc 49177,I0	// 49177 -> ETa
+	ldx (I0),A1/*V*/	// ETa ==> ET13
+	or A1,A0,A0	// ET13 or ET0 -> ET14
+	stx A0,(I0)/*V*/	// ET14 ==> ETa
+// ;
+// (*(volatile u_int16 __x *)(u_int16)(0xC017)) |= ((1<<8));
+	ldc 256,A0	// 256 -> 1 -> ET7
+	ldx (I2),A1/*V*/	// ET1 ==> ET15
+	or A1,A0,A1	// ET15 or ET7 -> ET16
+	stx A1,(I2)/*V*/	// ET16 ==> ET1
+// (*(volatile u_int16 __x *)(u_int16)(0xC019)) |= ((1<<8));
+	ldx (I0),A1/*V*/	// ETa ==> ET17
+	j F0B6
+	or A1,A0,A0	// ET17 or ET7 -> ET18
+// jumped away
+F0B8:
+// ;
+// 		}
+
+// else {
+// {(*(volatile u_int16 __x *)(u_int16)(0xC019)) &= ~(((1 << 6)));
+	ldx (I0),A1/*V*/	// ETa ==> ET1a
+	j F0B6
+	and A1,A0,A0	// ET1a and ET19 -> ET1b
+// jumped away
+
+	.end

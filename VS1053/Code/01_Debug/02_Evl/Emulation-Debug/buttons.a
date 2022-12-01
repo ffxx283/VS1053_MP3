@@ -1,0 +1,143 @@
+
+//_____________________________________________________________
+//
+	.sect code,GetKeyState	// 61 words
+	.export _GetKeyState
+_GetKeyState:
+F0B7:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx A1,(I6)
+	sty B0,(I6)+1
+	stx B1,(I6)
+	sty C0,(I6)+1
+	stx C1,(I6)
+	sty I0,(I6)+1
+	stx I1,(I6)
+	sty I2,(I6)
+F0B2:
+// *(__x volatile u_int16 *)(u_int16)(0xC012)) = 0;
+	ldc 49170,I1	// 49170 -> ET1
+	and NULL,NULL,A1	// 0 -> 1 -> ET0
+	stx A1,(I1)/*V*/	// ET0 ==> ET1
+// (*(__x volatile u_int16 *)(u_int16)(0xC019)) &= ~((1<<3)|(1<<5));
+	ldc 49177,I0	// 49177 -> ET3
+	ldx (I0),B0/*V*/	// ET3 ==> ET4
+	ldc 65495,A0	// 65495 -> 1 -> ET2
+	and B0,A0,A0	// ET4 and ET2 -> ET5
+	stx A0,(I0)/*V*/	// ET5 ==> ET3
+// 	g = ((*(__x volatile u_int16 *)(u_int16)(0xC018)) & ((1<<10)|(1<<8)|(1<<11))) >> 8;
+	ldc 49176,I2	// 49176 -> ET6
+	ldx (I2),B0/*V*/	// ET6 ==> ET7
+	ldc 3328,A0	// 3328 -> 1 -> ET9
+	and B0,A0,C0	// ET7 and ET9 -> ETa
+	ldc -8,B0	// -8 -> 0 -> ETc
+	and C1,NULL,C1
+	ashl C,B0,B	// AT1f <- ETc -> AT20
+// (*(__x volatile u_int16 *)(u_int16)(0xC012)) = 1;
+	sub NULL,ONES,B1	// 1 -> 1 -> ETe
+	stx B1,(I1)/*V*/	// ETe ==> ET1
+// 	g |= ((*(__x volatile u_int16 *)(u_int16)(0xC018)) & ((1<<10)|(1<<8)|(1<<11))) >> 4;
+	ldx (I2),B1/*V*/	// ET6 ==> ETf
+	and B1,A0,C0	// ETf and ET9 -> ET11
+	ldc -4,B1	// -4 -> 0 -> ET13
+	and C1,NULL,C1
+	ashl C,B1,C	// AT21 <- ET13 -> AT22
+	or B0,C0,B0	// 'g' or ET14 -> 'g'
+// (*(__x volatile u_int16 *)(u_int16)(0xC012)) = 0;
+	stx A1,(I1)/*V*/	// ET0 ==> ET1
+// (*(__x volatile u_int16 *)(u_int16)(0xC019)) |= ((1<<3)|(1<<5));
+	ldx (I0),B1/*V*/	// ET3 ==> ET17
+	ldc 40,A1	// 40 -> 1 -> ET16
+	or B1,A1,A1	// ET17 or ET16 -> ET18
+	stx A1,(I0)/*V*/	// ET18 ==> ET3
+// 	g |= ((*(__x volatile u_int16 *)(u_int16)(0xC018)) & ((1<<10)|(1<<8)|(1<<11))) >> 0;
+	ldx (I2),A1/*V*/	// ET6 ==> ET19
+	and A1,A0,A0	// ET19 and ET9 -> ET1b
+	or B0,A0,A0	// 'g' or ET1b -> 'g'
+// 	}
+// result
+// (g != lastKeypress)
+	ldc _lastKeypressd3b0f8,I0	// ET1e
+	ldx (I0),B0/*V*/	// ET1e ==> 'lastKeypress'
+	add A0,NULL,A1	// 'g' -> 'result'
+	sub A0,B0,B0	// 'g' == 'lastKeypress' -> AT23
+	nop
+	jzs F0B4	// unsigned compare
+	nop
+// jumped away
+F0B3:
+// result = 0;
+	and NULL,NULL,A1	// 0 -> 'result'
+F0B4:
+// 		lastKeypress = g;
+	ldc _lastKeypressd3b0f8,I0	// ET1e
+	stx A0,(I0)/*V*/	// 'g' ==> ET1e
+// 		return result;
+	add A1,NULL,A0	// 'result' returns via A0
+F0B1:
+	ldy (I6),I2
+	ldx (I6)-1,I1
+	ldy (I6),I0
+	ldx (I6)-1,C1
+	ldy (I6),C0
+	ldx (I6)-1,B1
+	ldy (I6),B0
+	ldx (I6)-1,A1
+	jr
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect code,GetKeyPress	// 24 words
+	.export _GetKeyPress
+_GetKeyPress:
+F1B8:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx LR0,(I6)+1
+	stx A1,(I6)
+	sty B0,(I6)+1
+	stx I0,(I6)
+F1B2:
+
+	call _GetKeyState
+	nop
+// jumped away
+F1B3:
+	add A0,NULL,A1	// A0 -> 'g'
+// result
+// (lastKeypress)
+	ldc _lastKeypressd3b1d0,I0	// ET1
+	ldx (I0),B0/*V*/	// ET1 ==> 'lastKeypress'
+	add A1,NULL,A0	// 'g' -> 'result'
+	sub B0,NULL,B0	// 'lastKeypress' == (0) -> (0)
+	nop
+	jzs F1B5	// unsigned compare
+	nop
+// jumped away
+F1B4:
+// result = 0;
+	and NULL,NULL,A0	// 0 -> 'result'
+F1B5:
+// 	lastKeypress = g;
+	ldc _lastKeypressd3b1d0,I0	// ET1
+	stx A1,(I0)/*V*/	// 'g' ==> ET1
+// 	return result;
+F1B1:
+	ldx (I6)-1,I0
+	ldy (I6),B0
+	ldx (I6)-1,A1
+	ldx (I6)-1,LR0
+	jr
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect data_x,init_x	// 2 words
+_lastKeypressd3b0f8:
+	.word 0
+_lastKeypressd3b1d0:
+	.word 0
+
+	.end

@@ -1,0 +1,320 @@
+
+//_____________________________________________________________
+//
+	.sect code,ADCInterruptHandler	// 138 words
+	.export _ADCInterruptHandler
+_ADCInterruptHandler:
+F0B8:
+	stx MR0,(I6)
+	sty I7,(I6)+1
+	stx LR0,(I6)+1
+	stx I6,(I6)
+	sty I4,(I6)
+	ldx (I6),I4
+	ldx (I6)+4,NULL	// I6 += 4
+	stx I5,(I6)
+	sty LR1,(I6)+1
+	stx A0,(I6)
+	sty A2,(I6)+1
+	stx A1,(I6)
+	sty B0,(I6)+1
+	stx B2,(I6)
+	sty B1,(I6)+1
+	stx C0,(I6)
+	sty C2,(I6)+1
+	stx C1,(I6)
+	sty D0,(I6)+1
+	stx D2,(I6)
+	sty D1,(I6)+1
+	stx I0,(I6)
+	sty I1,(I6)+1
+	stx I2,(I6)
+	add NULL,P,A	//  +  -> A
+	sty A0,(I6)+1
+	stx A1,(I6)
+	ldc 512,MR0	// 512 -> MR0
+F0B2:
+// leftSample
+	ldc 49219,I0	// 49219 -> ET0
+	ldx (I0),A0/*V*/	// ET0 ==> 'leftSample'
+// rightSample
+	ldc 49220,I0	// 49220 -> ET3
+	ldx (I0),A1/*V*/	// ET3 ==> 'rightSample'
+// (stereoSampleOut[0],stereoSampleOut[1]);
+	ldc _stereoSampleOut+1,I0	// ET8
+	ldx (I0),D1/*V*/	// ET8 ==> 1 -> ET9
+	ldx (I0)-1,NULL	// ET8 += -1
+	ldx (I0),D0/*V*/	// ET8 ==> ETa
+	ldx (I6)+1,NULL	// I6 += 1
+	ldc _stereoSampleOut,I2	// ET6
+	call _WriteStereoSampleToDacBuffer
+	nop
+// jumped away
+F0B3:
+	ldx (I0)+1,NULL	// ET8 += 1
+// 	leftSample = Sat16Sub(leftSample, (s_int16)(leftDcOffset >> 16));
+	ldc _leftDcOffsetd22110,I1	// ETd
+	ldx (I1)+1,B0/*V*/
+	ldx (I1)-1,B1/*V*/
+	mv B1,B1	// update guard bits
+	add B1,NULL,B0	// 'leftDcOffset' >>> ETe
+	add A0,NULL,D0	// 'leftSample' -> D0
+	add B0,NULL,D1	// ETf -> D1
+	ldx (I6)+1,NULL	// I6 += 1
+	call _Sat16Sub
+	nop
+// jumped away
+F0B4:
+	ldx (I4)+1,NULL	// I4 += 1
+	stx A0,(I4)	// A0 spills to #0
+	sty A1,(I4)+1	// A1 spills to #0
+	add A0,NULL,C0	// A0 -> 'leftSample'
+// 	leftDcOffset += leftSample;
+	sub NULL,ONES,B0	// 1 -> 0 -> ET7
+	mulss C0,B0	// 'leftSample' sXtd ET7 -> P
+	add NULL,P,D	// P -> ET11
+	stx D0,(I4)	// D0 spills to #0
+	sty D1,(I4)-1	// D1 spills to #0
+	ldx (I1)+1,A0/*V*/
+	ldx (I1)-1,A1/*V*/
+	add A,D,D	// 'leftDcOffset' + ET11 -> ET12
+	stx D0,(I1)+1/*V*/
+	stx D1,(I1)-1/*V*/
+// 	rightSample = Sat16Sub(rightSample, (s_int16)(rightDcOffset >> 16));
+	ldc _rightDcOffsetd22110,I1	// ET13
+	ldx (I1)+1,D0/*V*/
+	ldx (I1)-1,D1/*V*/
+	mv D1,D1	// update guard bits
+	add D1,NULL,D0	// 'rightDcOffset' >>> ET14
+	ldx (I4),A0	// unspill A0 from #0
+	ldy (I4)-1,A1	// unspill A1 from #0
+	add D0,NULL,A0	// ET14 lsw ET15
+	add A1,NULL,D0	// 'rightSample' -> D0
+	add A0,NULL,D1	// ET15 -> D1
+	ldx (I6)+1,NULL	// I6 += 1
+	call _Sat16Sub
+	nop
+// jumped away
+F0B5:
+	ldx (I4)+2,NULL	// I4 += 2
+// 	rightDcOffset += rightSample;
+	mulss A0,B0	// 'rightSample' sXtd ET7 -> P
+	add NULL,P,B	// P -> ET17
+	ldx (I1)+1,D0/*V*/
+	ldx (I1)-1,D1/*V*/
+	add D,B,D	// 'rightDcOffset' + ET17 -> ET18
+	stx D0,(I1)+1/*V*/
+	stx D1,(I1)-1/*V*/
+// 	stereoSampleIn[0] = leftSample;
+	ldc _stereoSampleIn,I1	// ET19
+	stx C0,(I1)/*V*/	// 'leftSample' ==> ET19
+// 	stereoSampleIn[1] = rightSample;
+	ldx (I1)+1,NULL	// ET19 += 1
+	stx A0,(I1)/*V*/	// 'rightSample' ==> ET19
+//  stereoSampleOut[0] = Saturate24to16((s_int32)leftSample << boostShift);
+	ldc _boostShift,I1	// ET1b
+	ldx (I1),A0/*V*/	// ET1b ==> ET1c
+	ldx (I4),C0	// unspill C0 from #0
+	ldy (I4)-2,C1	// unspill C1 from #0
+	mv C1,C1	// update guard bits
+	ashl C,A0,A	// ET11 << ET1c -> ET1d
+	call _Saturate24to16
+	nop
+// jumped away
+F0B6:
+	stx A0,(I2)/*V*/	// ET1e ==> ET6
+//  stereoSampleOut[1] = Saturate24to16((s_int32)rightSample << boostShift);
+	ldx (I1),A0/*V*/	// ET1b ==> ET1c
+// (B2 already up to date)
+	ashl B,A0,A	// ET17 << ET1c -> ET1f
+	call _Saturate24to16
+	nop
+// jumped away
+F0B7:
+	stx A0,(I0)/*V*/	// ET20 ==> ET8
+// 	sampleCounter16++;
+	ldc _sampleCounter16,I0	// ET21
+	ldx (I0),A0/*V*/	// ET21 ==> 'sampleCounter16'
+	sub A0,ONES,A0	// 'sampleCounter16' - (-1) -> ET24
+	stx A0,(I0)/*V*/	// ET24 ==> ET21
+F0B1:
+	ldx (I6)-1,A1
+	ldy (I6),A0
+	resp A0,A1
+	ldx (I6)-1,I2
+	ldy (I6),I1
+	ldx (I6)-1,I0
+	ldy (I6),D1
+	ldx (I6)-1,D2
+	ldy (I6),D0
+	ldx (I6)-1,C1
+	ldy (I6),C2
+	ldx (I6)-1,C0
+	ldy (I6),B1
+	ldx (I6)-1,B2
+	ldy (I6),B0
+	ldx (I6)-1,A1
+	ldy (I6),A2
+	ldx (I6)-1,A0
+	ldy (I6),LR1
+	ldx (I6)-1,I5
+	ldx (I4),I6
+	ldy (I4),I4
+	ldx (I6)-1,NULL	// I6 += -1
+	ldx (I6)-1,LR0
+
+	ldx (I6),MR0	// return from interrupt
+	ldc INT_GLOB_ENA,I7
+	reti
+	stx I7,(I7) ; ldy (I6)-1,I7
+
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect interrupt_35,int_ADCInterruptHandler	// 1 word
+	.export int_ADCInterruptHandler
+int_ADCInterruptHandler:
+	jmpi _ADCInterruptHandler,(I6)+1
+
+//_____________________________________________________________
+//
+	.sect code,InitAudioPath	// 74 words
+	.export _InitAudioPath
+_InitAudioPath:
+F1B9:
+	ldx (I6)+1,NULL	// I6 += 1
+	stx LR0,(I6)+1
+	stx I6,(I6)
+	sty I4,(I6)
+	ldx (I6),I4
+	ldx (I6)+1,NULL	// I6 += 1
+	stx A0,(I6)
+	sty A1,(I6)+1
+	stx B0,(I6)
+	sty C1,(I6)+1
+	stx I0,(I6)
+	sty I2,(I6)
+F1B2:
+
+	ldc _MyDacVector,A0	// ET0
+	mv A0,I0	// ET0 -> I0
+	call _ReadFromProgramRam
+	nop
+// jumped away
+F1B3:
+// ();
+	call _Disable
+	nop
+// jumped away
+F1B4:
+// (*(volatile u_int16 __x *)(u_int16)(0xC015)) = 0;
+	ldc 49173,I0	// 49173 -> ET5
+	and NULL,NULL,B0	// 0 -> 1 -> ET4
+	stx B0,(I0)/*V*/	// ET4 ==> ET5
+// (*(volatile u_int16 __x *)(u_int16)(0xC016)) = 0;
+	ldc 49174,I0	// 49174 -> ET6
+	stx B0,(I0)/*V*/	// ET4 ==> ET6
+// (*(volatile u_int16 __x *)(u_int16)(0xc042)) = 1 | 4;
+	ldc 49218,I0	// 49218 -> ET8
+	ldc 5,B0	// 5 -> 1 -> ET7
+	stx B0,(I0)/*V*/	// ET7 ==> ET8
+// (*(volatile u_int16 __x *)(u_int16)(0xC01A)) = (1<< 5);
+	ldc 49178,I2	// 49178 -> ETa
+	ldc 32,B0	// 32 -> 1 -> ET9
+	stx B0,(I2)/*V*/	// ET9 ==> ETa
+// 	WriteToProgramRam(0x20, (u_int16)(t >> 16), (u_int16)t);
+	add A0,NULL,B0	// 't' lsw ETb
+	add A1,NULL,A0	// 't' >>> ETf
+	ldc 32,I0	// 32 -> I0
+	add A0,NULL,A1	// ET11 -> A1
+	add B0,NULL,A0	// ETb -> A0
+	call _WriteToProgramRam
+	nop
+// jumped away
+F1B5:
+// 	Enable();
+	call _Enable
+	nop
+// jumped away
+F1B6:
+	ldx (I6)+1,NULL	// I6 += 1
+// 	LcdDelay(500000);
+	ldc 41248,A0	// 41248 -> 3 -> A0
+	ldc 7,A1	// 7 -> A1
+	stx A0,(I6)+1	// A0
+	stx A1,(I6)	// A1
+	call _LcdDelay
+	nop
+// jumped away
+F1B7:
+	ldx (I6)-2,NULL	// I6 += -2
+// (*(volatile u_int16 __x *)(u_int16)(0xC01A)) = (1<< 3) | (1<< 5) | (1<< 0);
+	ldc 41,A0	// 41 -> 1 -> ET15
+	stx A0,(I2)/*V*/	// ET15 ==> ETa
+// 	SetRate(48000U);
+	ldc 48000,C1	// 48000 -> C1
+	call _SetRate
+	nop
+// jumped away
+F1B8:
+// 	dacRdPtr = dacBuffer;
+	ldc _dacRdPtr,I0	// ET18
+	ldc _dacBuffer,A0	// ET17
+	sty A0,(I0)/*V*/	// ET17 ==> ET18
+// 	dacWrPtr = dacBuffer+(2*4);
+	ldc _dacWrPtr,I0	// ET1b
+	ldc _dacBuffer+8,A0	// ET1a
+	sty A0,(I0)/*V*/	// ET1a ==> ET1b
+// (*(volatile u_int16 __x *)(u_int16)(0xC001)) |= (1 << 0);
+	ldc 49153,I0	// 49153 -> ET1d
+	ldx (I0),A1/*V*/	// ET1d ==> ET1e
+	sub NULL,ONES,A0	// 1 -> 1 -> ET1c
+	or A1,A0,A0	// ET1e or ET1c -> ET1f
+	stx A0,(I0)/*V*/	// ET1f ==> ET1d
+F1B1:
+	ldy (I6),I2
+	ldx (I6)-1,I0
+	ldy (I6),C1
+	ldx (I6)-1,B0
+	ldy (I6),A1
+	ldx (I6)-1,A0
+	ldx (I4),I6
+	ldy (I4),I4
+	ldx (I6)-1,NULL	// I6 += -1
+	ldx (I6)-1,LR0
+	jr
+	nop
+// jumped away
+
+//_____________________________________________________________
+//
+	.sect data_x,const_x	// 4 words
+	.export _stereoSampleOut
+_stereoSampleOut:
+	.zero 1
+	.zero 1
+	.export _stereoSampleIn
+_stereoSampleIn:
+	.zero 1
+	.zero 1
+
+//_____________________________________________________________
+//
+	.sect data_x,bss_x	// 1 word
+	.export _sampleCounter16
+_sampleCounter16:
+	.bss 1
+
+//_____________________________________________________________
+//
+	.sect data_x,init_x	// 5 words
+	.export _boostShift
+_boostShift:
+	.word 0
+_leftDcOffsetd22110:
+	.word lo(0), hi(0)
+_rightDcOffsetd22110:
+	.word lo(0), hi(0)
+
+	.end

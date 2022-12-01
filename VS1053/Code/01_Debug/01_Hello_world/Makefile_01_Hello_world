@@ -1,0 +1,36 @@
+#Generic
+TARGET          = 01_Hello_world.coff
+TARGETPATH      = Emulation-Debug
+BUILDPATH       = Emulation-Debug
+VCC             = lcc
+VSA             = vsa
+VSLINK          = vslink
+VSAR            = vsar
+HOMEPATH        = D:\MP3\VSIDE
+HOMEPATH_WIN    = D:/MP3/VSIDE
+PROJPATH        = G:\03_MP3\VS1053\Code\01_Debug\01_Hello_world
+PROJNAME        = 01_Hello_world
+IF_DEPLOY       = @rem
+OBJS            = $(HOMEPATH)/libvs1053b/c.o $(BUILDPATH)\main.o 
+
+#Configuration defaults
+INCPATHS        = -I$(HOMEPATH)\libvs1053b
+LIBPATHS        = -L. -L$(HOMEPATH)\libvs1053b
+DEFINES         = -DDEBUG -DVS1053
+VCCFLAGS        = -g -hhw_desc -O6 -fsmall-code
+
+VSAFLAGS        = -c hw_desc -D ASM -I $(HOMEPATH)\libvs1053b
+VSLINKFLAGS     = -k -m user_vs1053.mem $(HOMEPATH)/libvs1053b/rom1053b.o
+LIBS            = -lc
+
+all: $(TARGETPATH)/$(TARGET)
+
+clean:
+	del /F /Q $(BUILDPATH)\*.*
+
+$(TARGETPATH)/$(TARGET): $(OBJS)
+	$(VSLINK) $(VSLINKFLAGS) $(OBJS) -o $(TARGETPATH)\$(TARGET) $(LIBPATHS) $(LIBS)
+
+$(BUILDPATH)\main.o: $(PROJPATH)\main.c $(PROJPATH)\board.h
+	$(VCC) $(VCCFLAGS) $(DEFINES) $(INCPATHS) -o $(BUILDPATH)\main.o $(PROJPATH)\main.c
+
